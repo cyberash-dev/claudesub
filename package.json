@@ -1,0 +1,21 @@
+{
+  "name": "claude-subscription-manager",
+  "version": "0.1.0",
+  "description": "Switch between Claude Code OAuth subscriptions on macOS.",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "claude-sub": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.4.0"
+  }
+}
