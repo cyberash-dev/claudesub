@@ -1,12 +1,61 @@
 #!/usr/bin/env node
-import { parseArgs } from "node:util";
-import { runList } from "./commands/list.js";
-import { runSave } from "./commands/save.js";
-import { runUse } from "./commands/use.js";
-import { runRm } from "./commands/rm.js";
-import { runRename } from "./commands/rename.js";
-import { runStatus } from "./commands/status.js";
-import { runAdd } from "./commands/add.js";
+import { homedir, userInfo } from "node:os";
+import { join } from "node:path";
+import {
+  EXIT_OK,
+  EXIT_RUNTIME,
+  EXIT_USAGE,
+  type CliExitCode,
+} from "./shared/domain/CliExitCode.js";
+import { LIVE_KEYCHAIN_SERVICE } from "./shared/domain/ServiceNames.js";
+
+import { ListProfiles } from "./features/list/application/ListProfiles.js";
+import { CliListHandler } from "./features/list/adapters/inbound/CliListHandler.js";
+import { NodeListProfileRepository } from "./features/list/adapters/outbound/NodeListProfileRepository.js";
+import { NodeListActiveMarker } from "./features/list/adapters/outbound/NodeListActiveMarker.js";
+
+import { GetStatus } from "./features/status/application/GetStatus.js";
+import { CliStatusHandler } from "./features/status/adapters/inbound/CliStatusHandler.js";
+import { NodeStatusProfileRepository } from "./features/status/adapters/outbound/NodeStatusProfileRepository.js";
+import { NodeStatusActiveMarker } from "./features/status/adapters/outbound/NodeStatusActiveMarker.js";
+import { NodeStatusClaudeJsonReader } from "./features/status/adapters/outbound/NodeStatusClaudeJsonReader.js";
+import { ChildProcessStatusAuthInspector } from "./features/status/adapters/outbound/ChildProcessStatusAuthInspector.js";
+
+import { SaveProfile } from "./features/save/application/SaveProfile.js";
+import { CliSaveHandler } from "./features/save/adapters/inbound/CliSaveHandler.js";
+import { ChildProcessSaveCredentialStore } from "./features/save/adapters/outbound/ChildProcessSaveCredentialStore.js";
+import { NodeSaveProfileRepository } from "./features/save/adapters/outbound/NodeSaveProfileRepository.js";
+import { NodeSaveActiveMarker } from "./features/save/adapters/outbound/NodeSaveActiveMarker.js";
+import { NodeSaveClaudeJsonReader } from "./features/save/adapters/outbound/NodeSaveClaudeJsonReader.js";
+import { SystemSaveClock } from "./features/save/adapters/outbound/SystemSaveClock.js";
+
+import { SwitchProfile } from "./features/use/application/SwitchProfile.js";
+import { CliUseHandler } from "./features/use/adapters/inbound/CliUseHandler.js";
+import { ChildProcessUseCredentialStore } from "./features/use/adapters/outbound/ChildProcessUseCredentialStore.js";
+import { NodeUseProfileRepository } from "./features/use/adapters/outbound/NodeUseProfileRepository.js";
+import { NodeUseActiveMarker } from "./features/use/adapters/outbound/NodeUseActiveMarker.js";
+import { NodeUseClaudeJsonWriter } from "./features/use/adapters/outbound/NodeUseClaudeJsonWriter.js";
+import { ChildProcessUseProcessInspector } from "./features/use/adapters/outbound/ChildProcessUseProcessInspector.js";
+import { ChildProcessUseAuthVerifier } from "./features/use/adapters/outbound/ChildProcessUseAuthVerifier.js";
+import { SystemUseClock } from "./features/use/adapters/outbound/SystemUseClock.js";
+
+import { RemoveProfile } from "./features/rm/application/RemoveProfile.js";
+import { CliRmHandler } from "./features/rm/adapters/inbound/CliRmHandler.js";
+import { ChildProcessRmCredentialStore } from "./features/rm/adapters/outbound/ChildProcessRmCredentialStore.js";
+import { NodeRmProfileRepository } from "./features/rm/adapters/outbound/NodeRmProfileRepository.js";
+import { NodeRmActiveMarker } from "./features/rm/adapters/outbound/NodeRmActiveMarker.js";
+import { StdioRmConfirmer } from "./features/rm/adapters/outbound/StdioRmConfirmer.js";
+
+import { RenameProfile } from "./features/rename/application/RenameProfile.js";
+import { CliRenameHandler } from "./features/rename/adapters/inbound/CliRenameHandler.js";
+import { ChildProcessRenameCredentialStore } from "./features/rename/adapters/outbound/ChildProcessRenameCredentialStore.js";
+import { NodeRenameProfileRepository } from "./features/rename/adapters/outbound/NodeRenameProfileRepository.js";
+import { NodeRenameActiveMarker } from "./features/rename/adapters/outbound/NodeRenameActiveMarker.js";
+
+import { AddProfile } from "./features/add/application/AddProfile.js";
+import { CliAddHandler } from "./features/add/adapters/inbound/CliAddHandler.js";
+import { ChildProcessAddLogout } from "./features/add/adapters/outbound/ChildProcessAddLogout.js";
+import { StdioAddPrompt } from "./features/add/adapters/outbound/StdioAddPrompt.js";
 
 const HELP = `claude-sub — switch between Claude Code OAuth subscriptions on macOS.
 
@@ -30,82 +79,117 @@ Notes:
   - Token blobs are passed to /usr/bin/security via argv; they are briefly visible in \`ps\` for the calling user only.
 `;
 
-async function main(argv: string[]): Promise<number> {
+interface Wired {
+  list: CliListHandler;
+  status: CliStatusHandler;
+  save: CliSaveHandler;
+  use: CliUseHandler;
+  rm: CliRmHandler;
+  rename: CliRenameHandler;
+  add: CliAddHandler;
+}
+
+function wire(): Wired {
+  const home = homedir();
+  const account = userInfo().username;
+  const stateDir = join(home, ".claude-subscription-manager");
+  const profilesPath = join(stateDir, "profiles.json");
+  const markerPath = join(stateDir, "active");
+  const claudeJsonPath = join(home, ".claude.json");
+
+  const listCmd = new ListProfiles(
+    new NodeListProfileRepository(profilesPath),
+    new NodeListActiveMarker(markerPath),
+  );
+
+  const statusCmd = new GetStatus(
+    new NodeStatusProfileRepository(profilesPath),
+    new NodeStatusActiveMarker(markerPath),
+    new NodeStatusClaudeJsonReader(claudeJsonPath),
+    new ChildProcessStatusAuthInspector(),
+  );
+
+  const saveCmd = new SaveProfile(
+    new ChildProcessSaveCredentialStore(account, LIVE_KEYCHAIN_SERVICE),
+    new NodeSaveProfileRepository(stateDir, profilesPath),
+    new NodeSaveActiveMarker(stateDir, markerPath),
+    new NodeSaveClaudeJsonReader(claudeJsonPath),
+    new SystemSaveClock(),
+  );
+
+  const useCmd = new SwitchProfile(
+    new ChildProcessUseCredentialStore(account, LIVE_KEYCHAIN_SERVICE),
+    new NodeUseProfileRepository(stateDir, profilesPath),
+    new NodeUseActiveMarker(stateDir, markerPath),
+    new NodeUseClaudeJsonWriter(claudeJsonPath),
+    new ChildProcessUseProcessInspector(),
+    new ChildProcessUseAuthVerifier(),
+    new SystemUseClock(),
+    {
+      onAutoSnapshotWarning: (w) => {
+        process.stderr.write(`Warning: failed to auto-snapshot active profile "${w.profileName}": ${w.reason}\n`);
+      },
+    },
+  );
+
+  const rmCmd = new RemoveProfile(
+    new ChildProcessRmCredentialStore(account),
+    new NodeRmProfileRepository(stateDir, profilesPath),
+    new NodeRmActiveMarker(markerPath),
+    new StdioRmConfirmer(),
+  );
+
+  const renameCmd = new RenameProfile(
+    new ChildProcessRenameCredentialStore(account),
+    new NodeRenameProfileRepository(stateDir, profilesPath),
+    new NodeRenameActiveMarker(stateDir, markerPath),
+  );
+
+  const addCmd = new AddProfile(
+    new ChildProcessAddLogout(),
+    new StdioAddPrompt(),
+    { snapshot: (name) => saveCmd.execute({ name, overwrite: true }).then(() => undefined) },
+  );
+
+  return {
+    list: new CliListHandler(listCmd),
+    status: new CliStatusHandler(statusCmd),
+    save: new CliSaveHandler(saveCmd),
+    use: new CliUseHandler(useCmd),
+    rm: new CliRmHandler(rmCmd),
+    rename: new CliRenameHandler(renameCmd),
+    add: new CliAddHandler(addCmd),
+  };
+}
+
+async function main(argv: string[]): Promise<CliExitCode> {
   const [command, ...rest] = argv;
 
   if (!command || command === "--help" || command === "-h" || command === "help") {
     process.stdout.write(HELP);
-    return 0;
+    return EXIT_OK;
   }
   if (command === "--version" || command === "-v") {
     process.stdout.write("claude-sub 0.1.0\n");
-    return 0;
+    return EXIT_OK;
   }
 
+  const handlers = wire();
+
   switch (command) {
-    case "list": {
-      const { values } = parseArgs({ args: rest, options: { json: { type: "boolean", default: false } }, strict: true });
-      return runList({ json: Boolean(values.json) });
-    }
-    case "status": {
-      const { values } = parseArgs({ args: rest, options: { json: { type: "boolean", default: false } }, strict: true });
-      return runStatus({ json: Boolean(values.json) });
-    }
-    case "save": {
-      const { values, positionals } = parseArgs({
-        args: rest,
-        options: { overwrite: { type: "boolean", default: false } },
-        allowPositionals: true,
-        strict: true,
-      });
-      const name = positionals[0];
-      if (!name) { process.stderr.write("Usage: claude-sub save <name> [--overwrite]\n"); return 2; }
-      return runSave({ name, overwrite: Boolean(values.overwrite) });
-    }
-    case "use": {
-      const { values, positionals } = parseArgs({
-        args: rest,
-        options: {
-          force: { type: "boolean", default: false },
-          "no-verify": { type: "boolean", default: false },
-        },
-        allowPositionals: true,
-        strict: true,
-      });
-      const name = positionals[0];
-      if (!name) { process.stderr.write("Usage: claude-sub use <name> [--force] [--no-verify]\n"); return 2; }
-      return runUse({ name, force: Boolean(values.force), noVerify: Boolean(values["no-verify"]) });
-    }
+    case "list":   return handlers.list.run(rest);
+    case "status": return handlers.status.run(rest);
+    case "save":   return handlers.save.run(rest);
+    case "use":    return handlers.use.run(rest);
     case "rm":
     case "remove":
-    case "delete": {
-      const { values, positionals } = parseArgs({
-        args: rest,
-        options: { yes: { type: "boolean", short: "y", default: false } },
-        allowPositionals: true,
-        strict: true,
-      });
-      const name = positionals[0];
-      if (!name) { process.stderr.write("Usage: claude-sub rm <name> [--yes]\n"); return 2; }
-      return runRm({ name, yes: Boolean(values.yes) });
-    }
+    case "delete": return handlers.rm.run(rest);
     case "rename":
-    case "mv": {
-      const { positionals } = parseArgs({ args: rest, allowPositionals: true, strict: true, options: {} });
-      const [oldName, newName] = positionals;
-      if (!oldName || !newName) { process.stderr.write("Usage: claude-sub rename <old> <new>\n"); return 2; }
-      return runRename({ oldName, newName });
-    }
-    case "add": {
-      const { positionals } = parseArgs({ args: rest, allowPositionals: true, strict: true, options: {} });
-      const name = positionals[0];
-      if (!name) { process.stderr.write("Usage: claude-sub add <name>\n"); return 2; }
-      return runAdd({ name });
-    }
-    default: {
+    case "mv":     return handlers.rename.run(rest);
+    case "add":    return handlers.add.run(rest);
+    default:
       process.stderr.write(`Unknown command: ${command}\n\n${HELP}`);
-      return 2;
-    }
+      return EXIT_USAGE;
   }
 }
 
@@ -113,6 +197,6 @@ main(process.argv.slice(2)).then(
   (code) => process.exit(code),
   (err) => {
     process.stderr.write(`error: ${err instanceof Error ? err.message : String(err)}\n`);
-    process.exit(1);
+    process.exit(EXIT_RUNTIME);
   },
 );
