@@ -118,7 +118,13 @@ unmodeled_budget:
 id: csm:BL-001
 type: BrownfieldBaseline
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.288Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 discovery_scope:
   - src
@@ -133,8 +139,8 @@ coverage_evidence:
       configuration, and dependency manifest. spec/spec.md and
       .sdd/config.json are intentionally outside Discovery scope to
       keep the freshness_token from being self-referential.
-freshness_token: b45c4e2503335a035f08f3bb81c5a78fff27c4831c70c6a37d1fd8a218e02537
-baseline_commit_sha: db22246554ab3b53e7f5eb95ab59b0acee8d1f13
+freshness_token: 034d550f5764d34ce907b345bf828568c64d1edb00524f3a482ce86ec3dcb7dc
+baseline_commit_sha: aa8af5bd17fda74dabad8e25e0feec8ddf52364e
 mechanism: git_tree_hash_v1
 notes: |
   Brownfield baseline carries no preserved as-is behavior on its own;
@@ -156,7 +162,13 @@ notes: |
 id: csm:SUR-001
 type: Surface
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.350Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 name: csm/cli
 version: "0.1.0"
@@ -177,7 +189,13 @@ notes: |
 id: csm:SUR-002
 type: Surface
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.350Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 name: csm/json-output
 version: "0.1.0"
@@ -198,7 +216,13 @@ notes: |
 id: csm:SUR-003
 type: Surface
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.350Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 name: csm/state-files
 version: "0.1.0"
@@ -221,7 +245,13 @@ notes: |
 id: csm:BEH-001
 type: Behavior
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.480Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: claude-sub list — print profiles with active marker
 given: |
@@ -279,7 +309,13 @@ test_obligation:
 id: csm:BEH-002
 type: Behavior
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.480Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: claude-sub status — report active profile, live auth status, desync
 given: |
@@ -338,7 +374,13 @@ test_obligation:
 id: csm:BEH-003
 type: Behavior
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.480Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: claude-sub save — snapshot live credentials into a named profile
 given: |
@@ -407,7 +449,13 @@ test_obligation:
 id: csm:BEH-004
 type: Behavior
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.480Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: claude-sub use — swap credentials with auto-snapshot and verification
 given: |
@@ -489,7 +537,13 @@ test_obligation:
 id: csm:BEH-005
 type: Behavior
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.480Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: claude-sub rm — delete profile metadata and keychain slot, leave live untouched
 given: |
@@ -544,7 +598,13 @@ test_obligation:
 id: csm:BEH-006
 type: Behavior
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.480Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: claude-sub rename — move keychain slot, update profiles.json, update marker
 given: |
@@ -598,7 +658,13 @@ test_obligation:
 id: csm:BEH-007
 type: Behavior
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.480Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: claude-sub add — orchestrate logout, login, save under one name
 given: |
@@ -652,7 +718,13 @@ test_obligation:
 id: csm:BEH-008
 type: Behavior
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.480Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: claude-sub usage errors — exit 2 on unknown command and missing positional
 given: |
@@ -707,7 +779,13 @@ test_obligation:
 id: csm:CON-001
 type: Contract
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.416Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: claude-sub argv shape per subcommand
 surface_ref: csm:SUR-001
@@ -768,7 +846,13 @@ test_obligation:
 id: csm:CON-002
 type: Contract
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.416Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: claude-sub exit-code taxonomy
 surface_ref: csm:SUR-001
@@ -812,7 +896,13 @@ test_obligation:
 id: csm:CON-003
 type: Contract
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.416Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: claude-sub list --json output shape
 surface_ref: csm:SUR-002
@@ -873,7 +963,13 @@ test_obligation:
 id: csm:CON-004
 type: Contract
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.416Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: claude-sub status --json output shape
 surface_ref: csm:SUR-002
@@ -941,7 +1037,13 @@ test_obligation:
 id: csm:CON-005
 type: Contract
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.416Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: profiles.json on-disk schema
 surface_ref: csm:SUR-003
@@ -1007,7 +1109,13 @@ test_obligation:
 id: csm:CON-006
 type: Contract
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.416Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: active marker file format
 surface_ref: csm:SUR-003
@@ -1053,7 +1161,13 @@ test_obligation:
 id: csm:CON-007
 type: Contract
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.416Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: ~/.claude.json patch protocol (mutated fields only)
 surface_ref: csm:SUR-003
@@ -1113,7 +1227,13 @@ test_obligation:
 id: csm:INV-001
 type: Invariant
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.543Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: profile names are unique within profiles.json
 always: |
@@ -1145,7 +1265,13 @@ test_obligation:
 id: csm:INV-002
 type: Invariant
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.543Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: active marker, when present, names a profile in profiles.json
 always: |
@@ -1180,7 +1306,13 @@ test_obligation:
 id: csm:INV-003
 type: Invariant
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.543Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: state directory mode 0700, profiles.json and active mode 0600
 always: |
@@ -1217,7 +1349,13 @@ test_obligation:
 id: csm:INV-004
 type: Invariant
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.543Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: token blob is never written to stdout, stderr, or non-keychain files
 never: |
@@ -1249,7 +1387,13 @@ test_obligation:
 id: csm:INV-005
 type: Invariant
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.543Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: post-use accountUuid alignment between live JSON and target profile
 always: |
@@ -1293,7 +1437,13 @@ test_obligation:
 id: csm:EXT-001
 type: ExternalDependency
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.606Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 provider: macOS Keychain Services via the `security` CLI
 provider_surface@version: macOS-security-CLI@macOS-14
@@ -1341,7 +1491,13 @@ test_obligation:
 id: csm:EXT-002
 type: ExternalDependency
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.606Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 provider: macOS process inspection via `pgrep`
 provider_surface@version: macOS-pgrep-CLI@macOS-14
@@ -1382,7 +1538,13 @@ test_obligation:
 id: csm:EXT-003
 type: ExternalDependency
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.606Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 provider: Anthropic Claude Code CLI
 provider_surface@version: claude-code@stable
@@ -1434,7 +1596,13 @@ test_obligation:
 id: csm:EXT-004
 type: ExternalDependency
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.606Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 provider: Claude Code persistent state file ~/.claude.json
 provider_surface@version: claude-json@unversioned
@@ -1499,7 +1667,13 @@ through exit codes (CON-002), not text.
 id: csm:POL-001
 type: Policy
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.669Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: token blobs never written outside the macOS Keychain
 policy_kind: pii_redaction
@@ -1535,7 +1709,13 @@ test_obligation:
 id: csm:POL-002
 type: Policy
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.669Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: state directory and metadata files are local-user-only
 policy_kind: io_scope
@@ -1574,7 +1754,13 @@ test_obligation:
 id: csm:POL-003
 type: Policy
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.669Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 title: refuse `use` while claude is running, unless --force
 policy_kind: concurrency_safety
@@ -1614,7 +1800,13 @@ test_obligation:
 id: csm:CST-001
 type: Constraint
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.732Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 constraint: |
   Runtime platform is macOS only. csm depends on /usr/bin/security
@@ -1643,7 +1835,13 @@ test_obligation:
 id: csm:CST-002
 type: Constraint
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.732Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 constraint: |
   Node runtime must be >= 18.17 (engines.node = ">=18.17").
@@ -1668,7 +1866,13 @@ test_obligation:
 id: csm:CST-003
 type: Constraint
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.732Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 constraint: |
   csm has zero runtime dependencies. package.json#dependencies is
@@ -1696,7 +1900,13 @@ test_obligation:
 id: csm:CST-004
 type: Constraint
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.732Z
+    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
+    scope: first-time-approval
 partition_id: csm
 constraint: |
   Source layout follows Vertical Slice + Hexagonal architecture:
