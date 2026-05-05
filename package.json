@@ -9,7 +9,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "test:build": "tsc -p tsconfig.tests.json",
+    "test": "npm run test:build && node --test 'dist-test/tests/**/*.test.js'"
   },
   "engines": {
     "node": ">=18.17"
