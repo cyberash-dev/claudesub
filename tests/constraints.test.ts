@@ -74,7 +74,7 @@ describe("CST-004 Vertical Slice + Hexagonal layout", () => {
 
   // @covers csm:CST-004
   test("each slice under src/features/<name>/ has the canonical sub-tree", async () => {
-    const expectedSlices = ["add", "list", "rename", "rm", "save", "status", "use"];
+    const expectedSlices = ["add", "export", "import", "list", "rename", "rm", "save", "status", "use"];
     const expectedSub = ["adapters", "application", "domain", "ports"];
     const slices = (await readdir(join(SRC, "features"), { withFileTypes: true }))
       .filter((e) => e.isDirectory())

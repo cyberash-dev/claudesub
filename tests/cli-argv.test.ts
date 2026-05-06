@@ -135,3 +135,35 @@ describe("Usage errors (BEH-008)", () => {
     assert.equal(versionOutput, `claude-sub ${pkg.version}`);
   });
 });
+
+describe("Export/import argv (CON-008)", () => {
+  // @covers csm:CON-008
+  // @covers csm:DELTA-001
+  test("`claude-sub export` without <file> exits 2 with Usage line", async () => {
+    const r = await runIsolated(["export"]);
+    assert.equal(r.exitCode, 2);
+    assert.match(r.stderr, /Usage: claude-sub export <file>/);
+  });
+
+  // @covers csm:CON-008
+  test("`claude-sub import` without <file> exits 2 with Usage line", async () => {
+    const r = await runIsolated(["import"]);
+    assert.equal(r.exitCode, 2);
+    assert.match(r.stderr, /Usage: claude-sub import <file>/);
+  });
+
+  // @covers csm:CON-008
+  test("`claude-sub import --unknown-flag <file>` exits 1 from parseArgs strict mode", async () => {
+    const r = await runIsolated(["import", "--unknown-flag", "/tmp/x"]);
+    assert.equal(r.exitCode, 1);
+    assert.match(r.stderr, /error:.*unknown/i);
+  });
+
+  // @covers csm:DELTA-001
+  test("HELP banner advertises both `export` and `import` subcommands", async () => {
+    const r = await runIsolated(["--help"]);
+    assert.match(r.stdout, /\bclaude-sub export <file>/);
+    assert.match(r.stdout, /\bclaude-sub import <file>/);
+    assert.match(r.stdout, /--overwrite-active/);
+  });
+});

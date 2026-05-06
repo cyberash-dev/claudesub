@@ -163,6 +163,72 @@ export class FakeSnapshotter {
   }
 }
 
+export class FakeExportPassphrasePrompt {
+  passphrase = "secret";
+  shouldMismatch = false;
+  promptCalls = 0;
+  async promptNew(): Promise<string> {
+    this.promptCalls++;
+    if (this.shouldMismatch) {
+      const { PassphraseMismatch } = await import(
+        "../src/features/export/domain/ExportOutcome.js"
+      );
+      throw new PassphraseMismatch();
+    }
+    return this.passphrase;
+  }
+}
+
+export class FakeImportPassphrasePrompt {
+  passphrase = "secret";
+  promptCalls = 0;
+  async promptExisting(): Promise<string> {
+    this.promptCalls++;
+    return this.passphrase;
+  }
+}
+
+export class FakeExportFileWriter {
+  writes: Array<{ path: string; bytes: Uint8Array }> = [];
+  async write(path: string, bytes: Uint8Array): Promise<void> {
+    this.writes.push({ path, bytes: Buffer.from(bytes) });
+  }
+  last(): { path: string; bytes: Uint8Array } | undefined {
+    return this.writes[this.writes.length - 1];
+  }
+}
+
+export class FakeImportFileReader {
+  buffers = new Map<string, Uint8Array>();
+  async read(path: string): Promise<Uint8Array> {
+    const v = this.buffers.get(path);
+    if (v === undefined) throw Object.assign(new Error(`ENOENT: ${path}`), { code: "ENOENT" });
+    return v;
+  }
+}
+
+export class IdentityCipher {
+  // Wraps plaintext with a passphrase prefix so encrypt/decrypt round-trip works
+  // without invoking real crypto. Used for application-layer tests.
+  capturedPassphrase: string | null = null;
+  async encrypt(passphrase: string, plaintext: Uint8Array): Promise<Uint8Array> {
+    this.capturedPassphrase = passphrase;
+    const prefix = Buffer.from(`PASS=${passphrase}\n`, "utf8");
+    return Buffer.concat([prefix, Buffer.from(plaintext)]);
+  }
+  async decrypt(passphrase: string, fileBytes: Uint8Array): Promise<Uint8Array> {
+    const buf = Buffer.from(fileBytes);
+    const expected = Buffer.from(`PASS=${passphrase}\n`, "utf8");
+    if (buf.length < expected.length || !buf.subarray(0, expected.length).equals(expected)) {
+      const { BadPassphrase } = await import(
+        "../src/features/import/domain/ImportOutcome.js"
+      );
+      throw new BadPassphrase();
+    }
+    return buf.subarray(expected.length);
+  }
+}
+
 export function makeProfile(overrides: Partial<ProfileMetadata> = {}): ProfileMetadata {
   return {
     name: "test",

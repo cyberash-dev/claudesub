@@ -166,21 +166,26 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.350Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T14:37:03.118Z
+    change_request: export/import feature
+    scope: surface_major_bump
+    reviewed_test_oracle: tests/contracts-export.test.ts
 partition_id: csm
 name: csm/cli
-version: "0.1.0"
+version: "1.0.0"
 boundary_type: cli
 members:
   - csm:CON-001
   - csm:CON-002
+  - csm:CON-008
 consumer_compat_policy: semver_per_surface
 notes: |
   Argv shape and exit-code taxonomy for the `claude-sub` binary.
   Stable identifiers: subcommand names (list, status, save, use, rm,
-  rename, add) and their flag long-names.
+  rename, add, export, import) and their flag long-names. Major bump
+  to 1.0.0 cascades from csm:POL-001 predicate amendment (csm:DELTA-003);
+  additive extensions to argv (export/import + `--overwrite-active`)
+  themselves are minor-only. See csm:DELTA-001.
 ---
 ```
 
@@ -220,21 +225,26 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.350Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T14:38:03.955Z
+    change_request: export/import feature
+    scope: cascade-from-pol-001
+    reviewed_test_oracle: tests/contracts-export.test.ts
 partition_id: csm
 name: csm/state-files
-version: "0.1.0"
+version: "1.0.0"
 boundary_type: public_storage
 members:
   - csm:CON-005
   - csm:CON-006
+  - csm:CON-009
 consumer_compat_policy: semver_per_surface
 notes: |
   On-disk format of ~/.claude-subscription-manager/profiles.json
-  (versioned schema) and the active marker file. Owned by csm; not
-  read by Claude Code itself.
+  (versioned schema), the active marker file, and the encrypted
+  bundle file emitted by `claude-sub export` (csm:CON-009). Owned
+  by csm; not read by Claude Code itself. Major bump to 1.0.0
+  cascades from csm:POL-001 predicate amendment (csm:DELTA-003);
+  the new CON-009 member is itself additive. See csm:DELTA-002.
 ---
 ```
 
@@ -772,6 +782,214 @@ test_obligation:
 ---
 ```
 
+```yaml
+---
+id: csm:BEH-009
+type: Behavior
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T14:38:04.022Z
+    change_request: export/import feature
+    scope: cascade-from-pol-001
+    reviewed_test_oracle: tests/contracts-export.test.ts
+partition_id: csm
+title: claude-sub export — write all profiles to an encrypted bundle file
+given: |
+  - state directory exists and profiles.json is a valid CON-005
+    document with at least one profile (an empty store yields exit 1)
+  - every profile listed in profiles.json has a populated keychain
+    slot at "Claude Code-credentials.profile.<name>" (a missing slot
+    aborts the export)
+  - the target file path's parent directory exists and is writable
+when: user runs `claude-sub export <file>`
+then: |
+  process prompts the user twice on stdin for a passphrase (input is
+  not echoed); when the two entries differ the process exits 1 with
+  "Passphrases did not match" and no file is created. On match, the
+  process:
+    1. reads every profile keychain blob via EXT-001;
+    2. assembles the in-memory bundle
+       { version: 1, exportedAt: <ISO-now>, profiles: <profiles.json
+         rows verbatim>, keychainBlobs: { <name>: <base64-of-blob> } };
+    3. serialises the bundle as UTF-8 JSON;
+    4. derives a 32-byte key via scrypt(passphrase, salt, N=2**17,
+       r=8, p=1, dkLen=32) with a fresh 16-byte random salt;
+    5. encrypts the JSON with AES-256-GCM using a fresh 12-byte
+       random IV and AAD = magic||version (CON-009);
+    6. writes the resulting binary envelope (header + ciphertext +
+       16-byte GCM tag) to <file> atomically (tmp + rename) with
+       mode 0600;
+    7. prints "Exported <N> profile(s) to <file>" to stdout and exits 0.
+  No keychain blob byte ever appears outside the ciphertext section
+  of <file> (POL-001, POL-004).
+negative_cases:
+  - profiles.json missing or empty => exit 1, "No profiles to export"
+  - keychain slot missing for a listed profile => exit 1, error
+    propagated from EXT-001
+  - passphrases differ across the two prompts => exit 1, no file
+    created
+  - target path's parent directory missing or not writable => exit 1
+  - target file exists => atomically replaced (no special prompt; the
+    user supplies an explicit path)
+out_of_scope:
+  - per-profile selection (filtering by name)
+  - stdout export (binary format requires a file path)
+  - exporting the active marker (active state is not portable; see
+    BEH-010 negative_cases)
+applicability:
+  invariant_to_all_axes: true
+concurrency_model:
+  actor_concurrency: single_per_user
+  read_consistency: strong
+  idempotency: none
+  time_source: wall_clock:1s
+data_scope: all_data
+policy_refs:
+  - csm:POL-001
+  - csm:POL-002
+  - csm:POL-004
+test_obligation:
+  predicate: |
+    After successful export, <file> exists with mode 0600; its first
+    8 bytes equal the magic+version of CON-009; decrypting with the
+    supplied passphrase yields a parseable JSON object whose
+    `profiles` equals profiles.json#profiles and whose
+    `keychainBlobs[name]` after base64-decode equals the keychain
+    slot for that profile byte-for-byte; the export file does not
+    contain any keychain blob substring outside the ciphertext range.
+  test_template: integration
+  boundary_classes:
+    - empty store (no profiles) => exit 1
+    - one profile (round-trip identity)
+    - three profiles (round-trip identity, sorted)
+    - mismatched passphrases => exit 1, no file
+    - keychain slot missing for one profile => exit 1
+    - target file already exists => replaced atomically
+  failure_scenarios:
+    - rename(2) fails after tmp write => exit 1, no partial file
+---
+```
+
+```yaml
+---
+id: csm:BEH-010
+type: Behavior
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T14:38:04.088Z
+    change_request: export/import feature
+    scope: cascade-from-pol-001
+    reviewed_test_oracle: tests/contracts-export.test.ts
+partition_id: csm
+title: claude-sub import — load profiles from an encrypted bundle, skip-by-default on conflict
+given: |
+  - <file> exists, is readable, and was produced by claude-sub export
+    (CON-009 v1) with a passphrase the user can type
+  - state directory may or may not exist (created with mode 0700 if
+    absent)
+when: |
+  user runs `claude-sub import <file>` (with optional --overwrite,
+  optional --overwrite-active)
+then: |
+  process prompts the user once on stdin for a passphrase (input is
+  not echoed). The process then:
+    1. reads <file>, validates the CON-009 magic+version and length
+       fields; on any mismatch exits 1 with a typed error;
+    2. derives a 32-byte key via scrypt with the salt embedded in
+       the file header and decrypts the ciphertext under AES-256-GCM
+       with the embedded IV and AAD; on GCM tag mismatch exits 1
+       with "Wrong passphrase or corrupted file" — target state is
+       unchanged;
+    3. parses the plaintext as the v1 bundle schema and validates
+       every `profiles[i].name` against the regex
+       `^[a-zA-Z0-9._-]{1,64}$`; on any violation exits 1 with
+       "Invalid profile name in bundle" — target state is unchanged;
+    4. for each bundle profile, selects an action by conflict policy:
+         - target has no profile of that name      => import
+         - target has it AND name == active marker AND
+           --overwrite-active is absent             => skipped-active
+         - target has it AND name == active marker AND
+           --overwrite-active is present            => overwritten
+         - target has it AND name != active marker AND
+           (--overwrite or --overwrite-active)
+           is present                               => overwritten
+         - target has it AND name != active marker AND
+           neither flag is present                  => skipped
+    5. for each `import` or `overwrite` action, writes the profile's
+       keychain slot via EXT-001 and upserts profiles.json (atomic
+       tmp + rename, mode 0600);
+    6. prints a per-profile summary line and a totals line
+       "imported: <I>, overwritten: <W>, skipped: <S>, skipped-active:
+       <SA>" to stdout;
+    7. exits 0 unless every bundle profile fell into `skipped-active`
+       (in which case the run was a no-op and exits 1).
+  The active marker is NOT read for selection purposes other than
+  the conflict gate; the active marker is NOT modified; ~/.claude.json
+  is NOT modified; the live keychain entry is NOT modified.
+negative_cases:
+  - <file> missing or unreadable => exit 1
+  - magic or version mismatch => exit 1, "Unsupported export format"
+  - truncated file (length field exceeds available bytes) => exit 1
+  - GCM tag mismatch (wrong passphrase or tampered file) => exit 1,
+    target unchanged
+  - bundle profile name fails the regex => exit 1, target unchanged
+  - bundle profile name equals active marker AND --overwrite-active
+    absent => that profile is `skipped-active` with stderr warning;
+    other profiles proceed normally
+  - all bundle profiles fell into `skipped-active` => exit 1
+out_of_scope:
+  - merging conflicting profile fields (always full-record overwrite)
+  - touching the active marker, ~/.claude.json, or the live keychain
+  - passphrase retry loops (single attempt; exit 1 on failure)
+applicability:
+  invariant_to_all_axes: true
+concurrency_model:
+  actor_concurrency: single_per_user
+  read_consistency: strong
+  idempotency: at_least_once_with_key:profile_name
+  time_source: wall_clock:1s
+data_scope: all_data
+policy_refs:
+  - csm:POL-001
+  - csm:POL-002
+  - csm:POL-004
+test_obligation:
+  predicate: |
+    After successful import, profiles.json contains the union of the
+    pre-existing rows and the bundle's rows resolved by the conflict
+    policy; for every imported/overwritten profile the keychain slot
+    holds the bundle's blob bytes byte-for-byte; the active marker is
+    bit-identical to its pre-call content; ~/.claude.json is
+    bit-identical to its pre-call content; the live keychain entry
+    is bit-identical to its pre-call content; no plaintext blob byte
+    appears in stdout, stderr, or any file under HOME other than the
+    transient argv of EXT-001 invocations.
+  test_template: integration
+  boundary_classes:
+    - empty target store (all bundle profiles imported)
+    - target has 1 of 3 names, no flags (1 skipped, 2 imported)
+    - target has 1 of 3 names, --overwrite (1 overwritten, 2 imported)
+    - target has the active profile name, --overwrite alone =>
+      skipped-active for that one, others overwritten/imported
+    - target has the active profile name, --overwrite-active alone =>
+      overwritten incl. active
+    - all bundle profiles match active marker, --overwrite-active
+      absent => exit 1 with no mutations
+  failure_scenarios:
+    - wrong passphrase => exit 1, target unchanged
+    - truncated bundle => exit 1
+    - bundle profile name regex violation => exit 1, target unchanged
+    - rename(2) fails after tmp write of profiles.json => exit 1, no
+      partial profiles.json
+---
+```
+
 ## 7. Data contracts
 
 ```yaml
@@ -1220,6 +1438,186 @@ test_obligation:
 ---
 ```
 
+```yaml
+---
+id: csm:CON-008
+type: Contract
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T14:38:04.151Z
+    change_request: export/import feature
+    scope: cascade-from-pol-001
+    reviewed_test_oracle: tests/contracts-export.test.ts
+partition_id: csm
+title: claude-sub export / import argv shape
+surface_ref: csm:SUR-001
+schema: |
+  claude-sub export <file>
+  claude-sub import <file> [--overwrite] [--overwrite-active]
+preconditions: |
+  - <file> is a single positional path, supplied verbatim to fs APIs
+  - --overwrite-active implies --overwrite for non-active conflicts
+  - flags are long-form only (no short aliases)
+postconditions: |
+  - parseArgs runs in strict mode; unknown flags raise an Error caught
+    by main and printed as "error: <message>" with exit 1
+  - missing positional <file> => exit 2 with the command's "Usage:" line
+external_identifiers:
+  - "subcommand names: export, import"
+  - "flag names: --overwrite, --overwrite-active"
+compatibility_rules:
+  - adding a new flag is a minor bump
+  - removing or renaming an existing flag is a major bump
+  - changing the meaning of an existing flag without a rename is a
+    major bump
+applicability:
+  invariant_to_all_axes: true
+concurrency_model:
+  actor_concurrency: single_per_process
+  read_consistency: strong
+  idempotency: none
+  time_source: none
+data_scope: new_writes_only
+policy_refs:
+  - csm:POL-001
+  - csm:POL-004
+error_taxonomy:
+  - "exit 0 — success path (BEH-009, BEH-010)"
+  - "exit 1 — runtime failure (passphrase mismatch on export, wrong
+     passphrase or corrupt file on import, IO failure, all-skipped-
+     active import)"
+  - "exit 2 — argv shape error (unknown command, missing positional)"
+test_obligation:
+  predicate: |
+    Every documented argv shape is recognised by the dispatcher and
+    routes to the matching handler; --overwrite-active implies the
+    overwrite-of-non-active behavior; missing <file> exits 2; unknown
+    flag exits 1 with the parseArgs error.
+  test_template: integration
+  boundary_classes:
+    - export <file>
+    - import <file>
+    - import <file> --overwrite
+    - import <file> --overwrite-active
+    - import <file> --overwrite --overwrite-active (idempotent)
+    - export with no positional => exit 2
+    - import --unknown-flag <file> => exit 1
+---
+```
+
+```yaml
+---
+id: csm:CON-009
+type: Contract
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T14:38:04.213Z
+    change_request: export/import feature
+    scope: cascade-from-pol-001
+    reviewed_test_oracle: tests/contracts-export.test.ts
+partition_id: csm
+title: encrypted export bundle file format (csm export)
+surface_ref: csm:SUR-003
+schema: |
+  Binary file, layout (offsets in bytes):
+    0  ..   6  : magic            = ASCII "CSMEXP\0"   (7 bytes)
+    7  ..   7  : file_version     = 0x01               (1 byte)
+    8  ..  23  : kdf_salt         = random per export (16 bytes)
+   24  ..  35  : aead_iv          = random per export (12 bytes)
+   36  ..  39  : ciphertext_len   = uint32 big-endian  (4 bytes;
+                                    length of ciphertext + GCM tag)
+   40  ..  N-1 : ciphertext       (ciphertext_len - 16 bytes)
+    N  ..  N+15: gcm_tag          (16 bytes; emitted by AES-256-GCM)
+
+  KDF                : scrypt(passphrase, kdf_salt,
+                              N=2**17, r=8, p=1, dkLen=32)
+  Cipher             : AES-256-GCM
+  AAD                : bytes [0..40) — magic || file_version ||
+                       kdf_salt || aead_iv || ciphertext_len
+  Plaintext (UTF-8 JSON before encryption):
+    {
+      "version":     1,
+      "exportedAt":  <ISO-8601 string>,
+      "profiles":    [<ProfileMetadata as in CON-005>],
+      "keychainBlobs": {
+         "<profileName>": "<base64-of-keychain-blob-bytes>",
+         ...
+      }
+    }
+preconditions: |
+  - file mode is 0600 on emit; readers do not enforce mode
+  - parent directory of the emit path exists and is writable
+postconditions: |
+  - the file as a whole is opaque: every byte after the 40-byte
+    header (and including the 16-byte tag) is ciphertext under
+    AES-256-GCM keyed by scrypt(passphrase, kdf_salt)
+  - any single-bit modification of the header invalidates the GCM
+    tag (header is part of AAD)
+  - decryption with the wrong passphrase fails the GCM tag check
+    indistinguishably from corruption
+external_identifiers:
+  - "magic bytes: \"CSMEXP\\0\""
+  - "file_version byte: 0x01"
+  - "field offsets and lengths above"
+  - "scrypt parameters: N=2**17, r=8, p=1, dkLen=32"
+  - "cipher: AES-256-GCM with 12-byte IV and 16-byte tag"
+  - "plaintext JSON keys: version, exportedAt, profiles, keychainBlobs"
+compatibility_rules:
+  - bumping file_version (0x01 → 0x02) for any non-additive plaintext
+    change is a major bump
+  - changing scrypt parameters or the cipher is a major bump
+  - adding a new optional plaintext key (profiles or keychainBlobs
+    leaving prior keys intact) is a minor bump
+  - changing the JSON shape of an existing plaintext key is a major
+    bump
+applicability:
+  invariant_to_all_axes: true
+concurrency_model:
+  actor_concurrency: single_per_process
+  read_consistency: strong
+  idempotency: none
+  time_source: none
+data_scope: all_data
+policy_refs:
+  - csm:POL-001
+  - csm:POL-004
+error_taxonomy:
+  - magic mismatch => exit 1, "Unsupported export format"
+  - file_version unknown => exit 1, "Unsupported export format"
+  - ciphertext_len exceeds remaining file bytes => exit 1
+  - GCM tag mismatch => exit 1, "Wrong passphrase or corrupted file"
+  - plaintext is not parseable JSON or fails the schema above =>
+    exit 1, "Malformed export bundle"
+test_obligation:
+  predicate: |
+    A file produced by BEH-009 round-trips through BEH-010 byte-for-
+    byte (each profile's blob bytes recovered identically); flipping
+    any single byte in the header or ciphertext range causes
+    decryption to fail; encrypting the same plaintext twice produces
+    different ciphertexts (random salt/IV); plaintext payload is
+    never observable on disk except as ciphertext bytes.
+  test_template: contract
+  boundary_classes:
+    - 1-profile bundle round-trip
+    - 3-profile bundle round-trip
+    - byte-level layout assertions on a fixed-input bundle
+    - tampered AAD (flip a byte in the header)
+    - tampered ciphertext (flip a byte after offset 40)
+    - second encrypt of identical input differs (salt/IV randomness)
+  failure_scenarios:
+    - magic bytes wrong => exit 1
+    - file_version != 0x01 => exit 1
+    - truncated file (length field exceeds available bytes) => exit 1
+    - GCM tag mismatch => exit 1
+---
+```
+
 ## 8. Invariants
 
 ```yaml
@@ -1646,6 +2044,69 @@ test_obligation:
 ---
 ```
 
+```yaml
+---
+id: csm:EXT-005
+type: ExternalDependency
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T14:38:04.404Z
+    change_request: export/import feature
+    scope: cascade-from-pol-001
+    reviewed_test_oracle: tests/contracts-export.test.ts
+partition_id: csm
+provider: Node.js standard library — `node:crypto`
+provider_surface@version: nodejs-crypto@node-18.17-or-newer
+authority_url_or_doc: |
+  https://nodejs.org/docs/latest-v18.x/api/crypto.html
+consumer_contract: |
+  csm uses only the following node:crypto entry points:
+    - randomBytes(16) for the scrypt salt of CON-009
+    - randomBytes(12) for the AES-GCM IV of CON-009
+    - scryptSync(passphrase, salt, 32,
+                 { N: 2**17, r: 8, p: 1, maxmem: 256*1024*1024 })
+      to derive the 32-byte AEAD key
+    - createCipheriv("aes-256-gcm", key, iv)
+        with cipher.setAAD(aad), cipher.update, cipher.final,
+        cipher.getAuthTag() (16-byte tag)
+    - createDecipheriv("aes-256-gcm", key, iv)
+        with decipher.setAAD(aad), decipher.setAuthTag(tag),
+        decipher.update, decipher.final (throws on tag mismatch)
+  csm does not invoke any other crypto primitive (no HMAC, no
+  asymmetric keys, no PBKDF2). Algorithm and parameter choices are
+  fixed by csm:CON-009 and csm:POL-004; any drift is a major bump.
+drift_detection:
+  mechanism: changelog_watcher
+sandbox_or_fixture: not_applicable
+auth_scope: not_applicable
+rate_limits: not_applicable
+retry/idempotency: not_applicable
+error_taxonomy:
+  - scrypt OOM (process memory below maxmem) => Error propagated to
+    caller; exit 1 with the underlying message
+  - aes-256-gcm tag mismatch in createDecipheriv.final =>
+    BadPassphrase typed error in import flow; exit 1
+last_verified_at: "2026-05-06"
+test_obligation:
+  predicate: |
+    The export adapter calls scryptSync with the documented parameters
+    and createCipheriv("aes-256-gcm", ...); the import adapter calls
+    createDecipheriv("aes-256-gcm", ...) and surfaces tag-mismatch as
+    BadPassphrase. No other node:crypto primitive is referenced from
+    src/features/export or src/features/import.
+  test_template: integration
+  boundary_classes:
+    - happy path encrypt + decrypt round-trip
+    - decrypt with wrong passphrase => BadPassphrase
+    - decrypt with tampered AAD => BadPassphrase
+    - source-grep assertion — only the listed node:crypto symbols
+      are imported from the new slices
+---
+```
+
 ## 10. Generated artifacts
 
 None. csm produces a TypeScript build in `dist/` via `tsc`, but the
@@ -1671,29 +2132,42 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.669Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T14:38:04.277Z
+    change_request: export/import feature
+    scope: cascade-from-pol-001
+    reviewed_test_oracle: tests/contracts-export.test.ts
 partition_id: csm
-title: token blobs never written outside the macOS Keychain
+title: token blobs never written outside the macOS Keychain in plaintext
 policy_kind: pii_redaction
 applicability:
   applies_to: every Behavior in §6 and every Contract in §7
 predicate: |
-  The csm process MUST NOT write the byte content of any keychain
-  blob (live or profile) to stdout, to stderr, to any file under
-  ~/.claude-subscription-manager/, to ~/.claude.json, or to any other
-  filesystem path. The only legitimate egress is the argv of a child
-  /usr/bin/security invocation (EXT-001), which the macOS process
-  table exposes briefly to the same user only.
+  The csm process MUST NOT write the plaintext byte content of any
+  keychain blob (live or profile) to stdout, to stderr, to any file
+  under ~/.claude-subscription-manager/, to ~/.claude.json, or to
+  any other filesystem path. Two egress channels are permitted:
+    1. the argv of a child /usr/bin/security invocation (EXT-001),
+       which the macOS process table exposes briefly to the same
+       user only;
+    2. the ciphertext section of a CON-009 export bundle file under
+       the additional restrictions of csm:POL-004 (AES-256-GCM with
+       a passphrase-derived key); plaintext blob bytes never touch
+       the filesystem in this channel.
+  Predicate amended in csm:DELTA-003 to add channel (2). See
+  csm:POL-004 for the carve-out's preconditions and obligations.
 negative_test_obligations:
-  - run each BEH-001..008 happy and failure path while capturing
+  - run each BEH-001..010 happy and failure path while capturing
     stdout/stderr buffers and a recursive snapshot of every file
     modified under the user's HOME; assert no buffer or file content
-    contains the bytes of the live or profile keychain blob.
+    contains the plaintext bytes of any live or profile keychain
+    blob, except inside the ciphertext range of a CON-009 file.
   - run BEH-003 with a sentinel byte sequence as the live keychain
     blob; assert the sequence appears in process argv of the child
     `security add-generic-password` invocation only and nowhere else.
+  - run BEH-009 with a sentinel byte sequence as the keychain blob;
+    assert the sentinel appears nowhere on disk in plaintext (incl.
+    the export file before encryption) and is recoverable only after
+    decrypting the CON-009 bundle with the supplied passphrase.
 test_obligation:
   predicate: same as negative_test_obligations
   test_template: integration
@@ -1789,6 +2263,75 @@ test_obligation:
     - one claude running, --force (proceeds)
   failure_scenarios:
     - mutation observed when claude was running and --force was absent
+      => violates policy
+---
+```
+
+```yaml
+---
+id: csm:POL-004
+type: Policy
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T14:38:04.341Z
+    change_request: export/import feature
+    scope: cascade-from-pol-001
+    reviewed_test_oracle: tests/contracts-export.test.ts
+partition_id: csm
+title: encrypted egress carve-out for keychain blobs (export bundle)
+policy_kind: pii_redaction
+applicability:
+  applies_to: every Behavior and Contract introduced for export/import (csm:BEH-009, csm:BEH-010, csm:CON-009)
+predicate: |
+  When csm writes keychain blob bytes to a CON-009 export bundle
+  file, the bytes MUST appear only inside the ciphertext range of
+  that file under AES-256-GCM with the parameters fixed by csm:CON-009
+  (file header + offset 40 onwards). The encryption key MUST be
+  derived from a user-supplied passphrase via scrypt with parameters
+  N=2**17, r=8, p=1, dkLen=32, using a fresh 16-byte random salt and
+  a fresh 12-byte random IV per export. The header bytes
+  (magic, file_version, salt, IV, ciphertext_len) MUST be passed as
+  AAD to the AES-256-GCM cipher so any header tamper is detected.
+  The export file MUST be created with mode 0600. The passphrase
+  MUST never be persisted to any filesystem path, logged, or echoed
+  back to the terminal during prompt input. Plaintext keychain
+  bytes MUST never reach any filesystem path: the plaintext payload
+  MUST be encrypted in-memory and only the ciphertext envelope is
+  written.
+negative_test_obligations:
+  - run BEH-009 with a sentinel byte sequence as the keychain blob;
+    capture stdout/stderr and a recursive snapshot of every file
+    modified under HOME; assert the sentinel appears NOWHERE except
+    inside the ciphertext range of <file> (offsets 40..end), and
+    that decrypting <file> with the supplied passphrase yields a
+    plaintext containing the sentinel.
+  - run BEH-009 twice with identical inputs and identical passphrase;
+    assert the two output files differ in the kdf_salt and aead_iv
+    ranges (randomness check).
+  - run BEH-010 with a file whose AAD has been mutated by one bit;
+    assert exit 1 with no mutation of profiles.json or any keychain
+    slot.
+  - source-level audit of src/features/export and src/features/import
+    — assert no console.log / process.stderr.write / fs.write* call
+    receives the keychain blob plaintext as an argument; the only
+    consumer of the plaintext is the AES-256-GCM cipher.
+test_obligation:
+  predicate: same as negative_test_obligations
+  test_template: integration
+  boundary_classes:
+    - happy path encrypt + round-trip
+    - second encrypt of identical input differs in salt/IV
+    - tampered AAD => decrypt fails
+    - source-level — no plaintext-blob egress to logs / fs in
+      export/import slices
+  failure_scenarios:
+    - any sentinel substring observed outside ciphertext range
+      => violates policy
+    - identical salt or IV across two exports => violates policy
+    - passphrase echoed during prompt or written anywhere on disk
       => violates policy
 ---
 ```
@@ -1966,10 +2509,130 @@ schema bumps will be authored as `Migration` blocks here.
 
 ## 15. Deltas
 
-None. This spec is the initial baseline; every preserved behavior is
-authored directly as `Behavior`/`Invariant`/`Contract`. Subsequent
-PRs that change behavior will introduce `Delta` blocks pinned to
-`baseline_version: csm:BL-001`.
+```yaml
+---
+id: csm:DELTA-001
+type: Delta
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T14:38:04.468Z
+    change_request: export/import feature
+    scope: cascade-from-pol-001
+    reviewed_test_oracle: tests/contracts-export.test.ts
+partition_id: csm
+baseline_version: csm:SUR-001@0.1.0
+kind: surface_member_added
+summary: |
+  csm:SUR-001 (csm/cli) bumped 0.1.0 → 1.0.0. The bump is a major
+  version because csm:DELTA-003 amends csm:POL-001's predicate, which
+  cascades to every Surface that transitively references it via
+  policy_refs (every BEH-001..BEH-008 lists POL-001). Independent of
+  the cascade, this Delta adds csm:CON-008 (export/import argv) as
+  an additive Surface member.
+compatibility_action: migrate
+tests_old_behavior:
+  - csm:CON-001 (existing argv shapes still recognised)
+  - csm:CON-002 (existing exit-code taxonomy still holds)
+tests_new_behavior:
+  - csm:CON-008 (export/import argv and flags)
+  - csm:BEH-009 (export happy + failure paths)
+  - csm:BEH-010 (import happy + failure paths)
+notes: |
+  No existing argv shape is removed or repurposed. Aliases (rm/remove
+  /delete, rename/mv) are unchanged. Help banner gains lines for the
+  two new subcommands.
+---
+```
+
+```yaml
+---
+id: csm:DELTA-002
+type: Delta
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T14:38:04.531Z
+    change_request: export/import feature
+    scope: cascade-from-pol-001
+    reviewed_test_oracle: tests/contracts-export.test.ts
+partition_id: csm
+baseline_version: csm:SUR-003@0.1.0
+kind: surface_member_added
+summary: |
+  csm:SUR-003 (csm/state-files) bumped 0.1.0 → 1.0.0. The bump is a
+  major version because csm:DELTA-003 amends csm:POL-001 and the
+  policy_refs from CON-005/CON-006 cascade. Independent of the
+  cascade, this Delta adds csm:CON-009 (encrypted export bundle file
+  format) as an additive Surface member.
+compatibility_action: migrate
+tests_old_behavior:
+  - csm:CON-005 (profiles.json schema unchanged)
+  - csm:CON-006 (active marker file unchanged)
+tests_new_behavior:
+  - csm:CON-009 (export bundle byte layout, round-trip, tamper detect)
+notes: |
+  Files at ~/.claude-subscription-manager/profiles.json and
+  ~/.claude-subscription-manager/active are NOT modified by this
+  delta. The export bundle file lives at a user-supplied path,
+  outside the csm state directory.
+---
+```
+
+```yaml
+---
+id: csm:DELTA-003
+type: Delta
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T14:38:04.594Z
+    change_request: export/import feature
+    scope: cascade-from-pol-001
+    reviewed_test_oracle: tests/contracts-export.test.ts
+partition_id: csm
+baseline_version: csm:POL-001@v0.1.0
+kind: policy_predicate_amended
+summary: |
+  csm:POL-001's predicate is amended to permit a second egress
+  channel for keychain blob bytes: ciphertext-only inside a CON-009
+  export bundle file, under the additional restrictions of the new
+  csm:POL-004. The plaintext-egress prohibition is unchanged: blob
+  bytes still MUST NOT touch any filesystem path in plaintext, and
+  the only legitimate plaintext-bearing channel remains the argv of
+  /usr/bin/security (EXT-001). The predicate is broadened
+  (plaintext "MUST NOT write to filesystem" → "MUST NOT write
+  plaintext to filesystem; MAY write ciphertext per POL-004"), so
+  per SDD this is a major bump on every Surface whose members carry
+  POL-001 via policy_refs (csm:SUR-001 and csm:SUR-003).
+compatibility_action: migrate
+tests_old_behavior:
+  - csm:POL-001 negative tests for BEH-001..008 still hold (no
+    plaintext keychain bytes outside the security argv channel)
+tests_new_behavior:
+  - csm:POL-001 negative tests extended to BEH-009/010 (no plaintext
+    keychain bytes anywhere on disk; sentinel only inside ciphertext
+    range of CON-009 file)
+  - csm:POL-004 negative tests (encryption parameters, AAD coverage,
+    salt/IV randomness, no passphrase persistence)
+notes: |
+  Cascade rationale: BEH-001..008 each list POL-001 in policy_refs;
+  CON-001..007 each list POL-001 in policy_refs; SUR-001 and SUR-003
+  are the Surfaces whose members carry those policy_refs. Therefore
+  both Surfaces receive a major bump (csm:DELTA-001, csm:DELTA-002).
+  csm:SUR-002 (csm/json-output) does not gain new members from this
+  PR but its members (CON-003, CON-004) carry POL-001 via policy_refs;
+  whether SUR-002 also requires a bump is tracked as csm:OQ-005
+  (non-blocking); the conservative reading bumps SUR-002 too, but no
+  external consumer of SUR-002 changes.
+---
+```
 
 ## 16. Implementation bindings
 
@@ -2028,10 +2691,12 @@ question: |
   offers to rewrite ~/.claude.json from the active profile's
   recorded oauthAccount?
 options:
-  - label: ship_repair_v0_1_1
+  - label: ship_repair_in_a_future_minor
     consequence: |
-      Add BEH-009 + a new subcommand on csm:SUR-001; minor bump.
-      Reduces manual recovery burden after partial-failure swaps.
+      Add a new Behavior (next free BEH-id) + a new subcommand on
+      csm:SUR-001; minor bump. Reduces manual recovery burden after
+      partial-failure swaps. (BEH-009 was originally penciled in
+      here but is now claimed by the export Behavior.)
   - label: defer_to_v0_2
     consequence: |
       Keep `status` as the desync detector; users re-run
@@ -2067,6 +2732,38 @@ options:
 blocking: no
 owner: cyberash
 default_if_unresolved: stay_macos_only
+---
+```
+
+```yaml
+---
+id: csm:OQ-005
+type: Open-Q
+lifecycle:
+  status: proposed
+partition_id: csm
+question: |
+  Does csm:DELTA-003 also force a major bump on csm:SUR-002
+  (csm/json-output)? Members of SUR-002 (CON-003, CON-004) carry
+  csm:POL-001 in their policy_refs, so the predicate amendment in
+  DELTA-003 transitively touches SUR-002 the same way it touches
+  SUR-001 and SUR-003. SUR-002 gains no new members in this PR.
+options:
+  - label: bump_sur_002_too
+    consequence: |
+      Conservative reading: cascade is structural, not behavioural;
+      every Surface that references the amended Policy bumps to 1.0.0.
+      Adds csm:DELTA-004 (sur_002 0.1.0 → 1.0.0). No external
+      consumer of SUR-002 changes; the bump is purely bookkeeping.
+  - label: leave_sur_002_at_0_1_0
+    consequence: |
+      Argument: SUR-002's emitted JSON contains no keychain bytes
+      whatsoever — the predicate change physically cannot affect any
+      output of SUR-002, so the cascade is vacuous. Document this
+      reasoning in DELTA-003.notes and skip the bump.
+blocking: no
+owner: cyberash
+default_if_unresolved: leave_sur_002_at_0_1_0
 ---
 ```
 
@@ -2172,8 +2869,8 @@ tests:
 - Maintaining historical revisions of profiles. Each profile holds a
   single current snapshot; older snapshots are overwritten on
   auto-snapshot during `use` (BEH-004).
-- Cross-machine profile sync. csm operates on the local Keychain and
-  local filesystem only; bringing profiles to another machine
-  requires manual export of both the keychain entries and
-  profiles.json by the user.
+- (Removed in csm:DELTA-001 / csm:DELTA-002.) Cross-machine profile
+  sync is now in scope via `claude-sub export` / `claude-sub import`
+  (csm:BEH-009, csm:BEH-010); the encrypted bundle file format is
+  csm:CON-009 and the egress carve-out is csm:POL-004.
 

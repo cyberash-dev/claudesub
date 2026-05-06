@@ -57,6 +57,24 @@ import { CliAddHandler } from "./features/add/adapters/inbound/CliAddHandler.js"
 import { ChildProcessAddLogout } from "./features/add/adapters/outbound/ChildProcessAddLogout.js";
 import { StdioAddPrompt } from "./features/add/adapters/outbound/StdioAddPrompt.js";
 
+import { ExportProfiles } from "./features/export/application/ExportProfiles.js";
+import { CliExportHandler } from "./features/export/adapters/inbound/CliExportHandler.js";
+import { NodeExportProfileRepository } from "./features/export/adapters/outbound/NodeExportProfileRepository.js";
+import { ChildProcessExportCredentialStore } from "./features/export/adapters/outbound/ChildProcessExportCredentialStore.js";
+import { StdioExportPassphrasePrompt } from "./features/export/adapters/outbound/StdioExportPassphrasePrompt.js";
+import { NodeExportFileWriter } from "./features/export/adapters/outbound/NodeExportFileWriter.js";
+import { NodeCryptoExportCipher } from "./features/export/adapters/outbound/NodeCryptoExportCipher.js";
+import { SystemExportClock } from "./features/export/adapters/outbound/SystemExportClock.js";
+
+import { ImportProfiles } from "./features/import/application/ImportProfiles.js";
+import { CliImportHandler } from "./features/import/adapters/inbound/CliImportHandler.js";
+import { NodeImportProfileRepository } from "./features/import/adapters/outbound/NodeImportProfileRepository.js";
+import { ChildProcessImportCredentialStore } from "./features/import/adapters/outbound/ChildProcessImportCredentialStore.js";
+import { StdioImportPassphrasePrompt } from "./features/import/adapters/outbound/StdioImportPassphrasePrompt.js";
+import { NodeImportFileReader } from "./features/import/adapters/outbound/NodeImportFileReader.js";
+import { NodeCryptoImportCipher } from "./features/import/adapters/outbound/NodeCryptoImportCipher.js";
+import { NodeImportActiveMarker } from "./features/import/adapters/outbound/NodeImportActiveMarker.js";
+
 const HELP = `claude-sub — switch between Claude Code OAuth subscriptions on macOS.
 
 Usage:
@@ -67,6 +85,8 @@ Usage:
   claude-sub rename <old> <new>
   claude-sub rm <name> [--yes]
   claude-sub add <name>
+  claude-sub export <file>
+  claude-sub import <file> [--overwrite] [--overwrite-active]
   claude-sub --help | --version
 
 Profiles are stored as macOS Keychain items (service "Claude Code-credentials.profile.<name>")
@@ -77,6 +97,8 @@ Notes:
   - "use" auto-snapshots the currently active profile first to capture rotated refresh tokens.
   - "use" refuses if any "claude" process is running (override with --force).
   - Token blobs are passed to /usr/bin/security via argv; they are briefly visible in \`ps\` for the calling user only.
+  - "export" writes an encrypted bundle (AES-256-GCM with a passphrase-derived key) to <file>; the passphrase is prompted twice and never persisted.
+  - "import" prompts for the passphrase once. By default it skips profiles that already exist; --overwrite replaces them, and --overwrite-active is required to overwrite the currently active profile.
 `;
 
 interface Wired {
@@ -87,6 +109,8 @@ interface Wired {
   rm: CliRmHandler;
   rename: CliRenameHandler;
   add: CliAddHandler;
+  export: CliExportHandler;
+  import: CliImportHandler;
 }
 
 function wire(): Wired {
@@ -151,6 +175,24 @@ function wire(): Wired {
     { snapshot: (name) => saveCmd.execute({ name, overwrite: true }).then(() => undefined) },
   );
 
+  const exportCmd = new ExportProfiles(
+    new NodeExportProfileRepository(profilesPath),
+    new ChildProcessExportCredentialStore(account),
+    new StdioExportPassphrasePrompt(),
+    new NodeExportFileWriter(),
+    new NodeCryptoExportCipher(),
+    new SystemExportClock(),
+  );
+
+  const importCmd = new ImportProfiles(
+    new NodeImportProfileRepository(stateDir, profilesPath),
+    new ChildProcessImportCredentialStore(account),
+    new StdioImportPassphrasePrompt(),
+    new NodeImportFileReader(),
+    new NodeCryptoImportCipher(),
+    new NodeImportActiveMarker(markerPath),
+  );
+
   return {
     list: new CliListHandler(listCmd),
     status: new CliStatusHandler(statusCmd),
@@ -159,6 +201,8 @@ function wire(): Wired {
     rm: new CliRmHandler(rmCmd),
     rename: new CliRenameHandler(renameCmd),
     add: new CliAddHandler(addCmd),
+    export: new CliExportHandler(exportCmd),
+    import: new CliImportHandler(importCmd),
   };
 }
 
@@ -187,6 +231,8 @@ async function main(argv: string[]): Promise<CliExitCode> {
     case "rename":
     case "mv":     return handlers.rename.run(rest);
     case "add":    return handlers.add.run(rest);
+    case "export": return handlers.export.run(rest);
+    case "import": return handlers.import.run(rest);
     default:
       process.stderr.write(`Unknown command: ${command}\n\n${HELP}`);
       return EXIT_USAGE;
