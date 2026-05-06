@@ -139,8 +139,8 @@ coverage_evidence:
       configuration, and dependency manifest. spec/spec.md and
       .sdd/config.json are intentionally outside Discovery scope to
       keep the freshness_token from being self-referential.
-freshness_token: bdb6e92ae01a24d944ab4d60b852ed62c077b1f10aaabdc3a89db40704b5a004
-baseline_commit_sha: 5ced81d67aa161a646775803beab5ad465b9396a
+freshness_token: 72ca0b86f0ff21c8bd4730de29ab9a8da333c167f9c3017c043251ed657316f4
+baseline_commit_sha: 9dccf9afad53973b2edaed6243747f3cbb9a567f
 mechanism: git_tree_hash_v1
 notes: |
   Brownfield baseline carries no preserved as-is behavior on its own;
