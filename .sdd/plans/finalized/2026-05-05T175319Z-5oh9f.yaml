@@ -1,0 +1,59 @@
+plan_id: 2026-05-05T175319Z-5oh9f
+created_at: 2026-05-05T17:53:19.289Z
+pending_attestations:
+  - id: csm:BL-001
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.288Z
+    change_request: "initial v0.1.0 baseline approval — claude-subscription-manager"
+    scope: first-time-approval
+    target_status: approved
+  - id: csm:SUR-*
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.350Z
+    change_request: "initial v0.1.0 baseline approval — claude-subscription-manager"
+    scope: first-time-approval
+    target_status: approved
+  - id: csm:CON-*
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.416Z
+    change_request: "initial v0.1.0 baseline approval — claude-subscription-manager"
+    scope: first-time-approval
+    target_status: approved
+  - id: csm:BEH-*
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.480Z
+    change_request: "initial v0.1.0 baseline approval — claude-subscription-manager"
+    scope: first-time-approval
+    target_status: approved
+  - id: csm:INV-*
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.543Z
+    change_request: "initial v0.1.0 baseline approval — claude-subscription-manager"
+    scope: first-time-approval
+    target_status: approved
+  - id: csm:EXT-*
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.606Z
+    change_request: "initial v0.1.0 baseline approval — claude-subscription-manager"
+    scope: first-time-approval
+    target_status: approved
+  - id: csm:POL-*
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.669Z
+    change_request: "initial v0.1.0 baseline approval — claude-subscription-manager"
+    scope: first-time-approval
+    target_status: approved
+  - id: csm:CST-*
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-05T17:53:19.732Z
+    change_request: "initial v0.1.0 baseline approval — claude-subscription-manager"
+    scope: first-time-approval
+    target_status: approved

@@ -21,41 +21,62 @@
 
 ## 1. Context
 
-`claudesub` is a macOS-only CLI that manages multiple Claude Code
-OAuth subscriptions on a single workstation. Claude Code keeps the
-active subscription in two independent places — the macOS Keychain
-generic-password item `Claude Code-credentials` (OAuth tokens, both
-access and refresh) and the JSON file `~/.claude.json` (account
-metadata under `oauthAccount` and the top-level `userID`). The Claude
-Code CLI itself ships only `claude auth login | logout | status` and
-treats the keychain plus the JSON file as a single implicit account;
-swapping accounts manually requires a full logout/login cycle and
-loses the previous account's locally cached tokens.
+`claudesub` is a CLI that manages multiple Claude Code OAuth
+subscriptions on a single workstation. It runs on macOS, Linux, and
+Windows; the per-OS credential-store backend is dispatched at
+runtime (see §9, csm:EXT-001..EXT-009 and csm:CST-001).
+
+Claude Code keeps the active subscription in two independent
+places — the platform's OS credential store (macOS Keychain on
+darwin under service `Claude Code-credentials`; the file
+`~/.claude/.credentials.json` on linux; Windows Credential Manager
+under target name `Claude Code-credentials` on win32) holds OAuth
+tokens, while the JSON file `~/.claude.json` holds account metadata
+under `oauthAccount` and the top-level `userID`. The Claude Code
+CLI itself ships only `claude auth login | logout | status` and
+treats the credential store plus the JSON file as a single implicit
+account; swapping accounts manually requires a full logout/login
+cycle and loses the previous account's locally cached tokens.
 
 `claudesub` introduces named profiles. Each profile owns one extra
-keychain item (`Claude Code-credentials.profile.<name>`) plus a
-non-secret metadata row in `~/.claude-subscription-manager/profiles.json`.
+slot in the platform credential store (`Claude Code-credentials.profile.<name>`)
+plus a non-secret metadata row in `~/.claude-subscription-manager/profiles.json`.
 The active profile is recorded in `~/.claude-subscription-manager/active`.
-Switching profiles is a synchronous swap of the keychain item and the
-two `~/.claude.json` fields, with auto-snapshot of the previously
-active profile to preserve rotated refresh tokens.
+Switching profiles is a synchronous swap of the credential-store
+slot and the two `~/.claude.json` fields, with auto-snapshot of the
+previously active profile to preserve rotated refresh tokens.
 
 This spec governs the `claudesub` CLI only. The Claude Code CLI,
-the Anthropic OAuth flow, the macOS Keychain implementation, and the
-internal layout of `~/.claude.json` outside the two mutated fields
-are external dependencies (see §8) and out of scope for normative
-authoring (see §18).
+the Anthropic OAuth flow, the per-OS credential-store implementations,
+and the internal layout of `~/.claude.json` outside the two mutated
+fields are external dependencies (see §8) and out of scope for
+normative authoring (see §18).
 
 ---
 
 ## 2. Glossary
 
-- **Live keychain entry** — the macOS generic-password Keychain item
-  with `service="Claude Code-credentials"` and `account=$USER`. The
-  blob Claude Code reads to make API calls.
-- **Profile keychain entry** — a generic-password Keychain item with
-  `service="Claude Code-credentials.profile.<name>"` and
-  `account=$USER`. Owned by `claudesub`; Claude Code never reads it.
+- **OS credential store** — the platform-specific store that holds
+  OAuth tokens for Claude Code. On macOS: the Keychain
+  generic-password item with `service="Claude Code-credentials"` and
+  `account=$USER` (csm:EXT-001). On Linux: the JSON file at
+  `~/.claude/.credentials.json` (csm:EXT-006). On Windows: the
+  Credential Manager target named `Claude Code-credentials`
+  (csm:EXT-007). The selection is made at runtime by `process.platform`.
+- **Live store entry** — the OS-credential-store entry that Claude
+  Code reads to make API calls (the platform-specific incarnation of
+  the value previously called the "live keychain entry"). Identifier
+  shape per OS: macOS service `Claude Code-credentials`; Linux file
+  `~/.claude/.credentials.json`; Windows target `Claude Code-credentials`.
+- **Profile store entry** — a csm-owned slot in the same store, named
+  `Claude Code-credentials.profile.<name>` on macOS and Windows, or
+  represented as the file `~/.claude-subscription-manager/keychain/<name>.json`
+  on Linux. Owned by `claudesub`; Claude Code never reads it.
+- **Live keychain entry** — historical synonym for "Live store entry"
+  retained for §8 invariants tagged `os: [macos]`. Equivalent on
+  macOS only.
+- **Profile keychain entry** — historical synonym for "Profile store
+  entry" retained for §8 invariants tagged `os: [macos]`.
 - **Profile** — a named tuple of (profile keychain entry,
   metadata row in `profiles.json`). Identified by `name` matching
   `^[a-zA-Z0-9._-]{1,64}$`.
@@ -122,9 +143,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.288Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 discovery_scope:
   - src
@@ -166,10 +187,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T15:21:41.667Z
-    change_request: binary-rename-claudesub
-    scope: binary-rename
-    reviewed_test_oracle: tests/cli-argv.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 name: csm/cli
 version: "2.0.0"
@@ -199,9 +219,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.350Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 name: csm/json-output
 version: "0.1.0"
@@ -226,10 +246,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T14:38:03.955Z
-    change_request: export/import feature
-    scope: cascade-from-pol-001
-    reviewed_test_oracle: tests/contracts-export.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 name: csm/state-files
 version: "1.0.0"
@@ -260,10 +279,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T15:21:41.929Z
-    change_request: binary-rename-claudesub
-    scope: binary-rename
-    reviewed_test_oracle: tests/cli-argv.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: claudesub list — print profiles with active marker
 given: |
@@ -325,10 +343,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T15:21:41.993Z
-    change_request: binary-rename-claudesub
-    scope: binary-rename
-    reviewed_test_oracle: tests/cli-argv.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: claudesub status — report active profile, live auth status, desync
 given: |
@@ -391,10 +408,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T15:21:42.058Z
-    change_request: binary-rename-claudesub
-    scope: binary-rename
-    reviewed_test_oracle: tests/cli-argv.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: claudesub save — snapshot live credentials into a named profile
 given: |
@@ -467,10 +483,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T15:21:42.125Z
-    change_request: binary-rename-claudesub
-    scope: binary-rename
-    reviewed_test_oracle: tests/cli-argv.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: claudesub use — swap credentials with auto-snapshot and verification
 given: |
@@ -556,10 +571,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T15:21:42.192Z
-    change_request: binary-rename-claudesub
-    scope: binary-rename
-    reviewed_test_oracle: tests/cli-argv.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: claudesub rm — delete profile metadata and keychain slot, leave live untouched
 given: |
@@ -618,10 +632,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T15:21:42.258Z
-    change_request: binary-rename-claudesub
-    scope: binary-rename
-    reviewed_test_oracle: tests/cli-argv.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: claudesub rename — move keychain slot, update profiles.json, update marker
 given: |
@@ -679,10 +692,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T15:21:42.322Z
-    change_request: binary-rename-claudesub
-    scope: binary-rename
-    reviewed_test_oracle: tests/cli-argv.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: claudesub add — orchestrate logout, login, save under one name
 given: |
@@ -740,10 +752,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T15:21:42.387Z
-    change_request: binary-rename-claudesub
-    scope: binary-rename
-    reviewed_test_oracle: tests/cli-argv.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: claudesub usage errors — exit 2 on unknown command and missing positional
 given: |
@@ -800,10 +811,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T15:21:42.452Z
-    change_request: binary-rename-claudesub
-    scope: binary-rename
-    reviewed_test_oracle: tests/cli-argv.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: claudesub export — write all profiles to an encrypted bundle file
 given: |
@@ -891,10 +901,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T15:21:42.518Z
-    change_request: binary-rename-claudesub
-    scope: binary-rename
-    reviewed_test_oracle: tests/cli-argv.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: claudesub import — load profiles from an encrypted bundle, skip-by-default on conflict
 given: |
@@ -1010,10 +1019,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T15:21:41.736Z
-    change_request: binary-rename-claudesub
-    scope: binary-rename
-    reviewed_test_oracle: tests/cli-argv.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: claudesub argv shape per subcommand
 surface_ref: csm:SUR-001
@@ -1078,10 +1086,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T15:21:41.800Z
-    change_request: binary-rename-claudesub
-    scope: binary-rename
-    reviewed_test_oracle: tests/cli-argv.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: claudesub exit-code taxonomy
 surface_ref: csm:SUR-001
@@ -1129,9 +1136,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.416Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: claudesub list --json output shape
 surface_ref: csm:SUR-002
@@ -1196,9 +1203,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.416Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: claudesub status --json output shape
 surface_ref: csm:SUR-002
@@ -1270,9 +1277,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.416Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: profiles.json on-disk schema
 surface_ref: csm:SUR-003
@@ -1342,9 +1349,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.416Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: active marker file format
 surface_ref: csm:SUR-003
@@ -1394,9 +1401,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.416Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: ~/.claude.json patch protocol (mutated fields only)
 surface_ref: csm:SUR-003
@@ -1458,10 +1465,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T15:21:41.866Z
-    change_request: binary-rename-claudesub
-    scope: binary-rename
-    reviewed_test_oracle: tests/cli-argv.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: claudesub export / import argv shape
 surface_ref: csm:SUR-001
@@ -1528,10 +1534,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T14:38:04.213Z
-    change_request: export/import feature
-    scope: cascade-from-pol-001
-    reviewed_test_oracle: tests/contracts-export.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: encrypted export bundle file format (csm export)
 surface_ref: csm:SUR-003
@@ -1640,9 +1645,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.543Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: profile names are unique within profiles.json
 always: |
@@ -1678,9 +1683,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.543Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: active marker, when present, names a profile in profiles.json
 always: |
@@ -1719,21 +1724,26 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.543Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
-title: state directory mode 0700, profiles.json and active mode 0600
+title: state directory mode 0700, profiles.json and active mode 0600 (POSIX)
 always: |
-  After ensureStateDir, ~/.claude-subscription-manager/ has mode
-  0700; profiles.json is written with mode 0600 via writeFile and is
-  re-checked on read; the active marker file is written with mode 0600.
+  On macOS and Linux, after ensureStateDir,
+  ~/.claude-subscription-manager/ has mode 0700; profiles.json is
+  written with mode 0600 via writeFile and is re-checked on read;
+  the active marker file is written with mode 0600.
+  On Windows mode bits are not enforced (Node ignores `mode` on
+  win32); access protection is delegated to NTFS user-profile
+  default ACLs under `C:\Users\<name>\` (csm:ASM-004).
 scope: filesystem nodes under ~/.claude-subscription-manager/
 evidence: db_constraint
 stability: contractual
 data_scope: all_data
 applicability:
-  invariant_to_all_axes: true
+  applies_to: every Behavior on macOS or Linux that creates or rewrites csm state files
+  os: [macos, linux]
 concurrency_model:
   actor_concurrency: single_per_user
   read_consistency: strong
@@ -1742,7 +1752,8 @@ concurrency_model:
 test_obligation:
   predicate: |
     stat() on each path yields mode bits 0700 for the directory and
-    0600 for files after every mutating subcommand.
+    0600 for files after every mutating subcommand. Test runs only
+    when process.platform !== "win32".
   test_template: integration
   boundary_classes:
     - first save creates the directory
@@ -1762,27 +1773,30 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.543Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
-title: token blob is never written to stdout, stderr, or non-keychain files
+title: token blob is never written outside the platform live/profile store on macOS
 never: |
   The byte content of any keychain entry (live or profile) appears in
   process stdout, process stderr, or any file path other than the two
   legitimate sinks: the macOS Keychain (via /usr/bin/security) and a
   short-lived process argv passed to the child `security` invocation.
-scope: every BEH path
+  On Linux and Windows the analogous invariants are csm:INV-006 and
+  csm:INV-007 respectively.
+scope: every BEH path on macOS
 evidence: test_probe
 stability: contractual
 data_scope: all_data
 applicability:
-  invariant_to_all_axes: true
+  applies_to: every BEH path on macOS
+  os: [macos]
 test_obligation:
   predicate: |
-    For every BEH happy-path invocation, the captured stdout and
-    stderr buffers and every file modified during the call MUST NOT
-    contain the bytes of the live or profile keychain blob.
+    For every BEH happy-path invocation on macOS, the captured stdout
+    and stderr buffers and every file modified during the call MUST
+    NOT contain the bytes of the live or profile keychain blob.
   test_template: integration
   boundary_classes: [each BEH path]
   failure_scenarios:
@@ -1800,9 +1814,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.543Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: post-use accountUuid alignment between live JSON and target profile
 always: |
@@ -1837,6 +1851,105 @@ test_obligation:
 ---
 ```
 
+```yaml
+---
+id: csm:INV-006
+type: Invariant
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
+partition_id: csm
+title: token blob is never written outside the platform live/profile store on Linux
+never: |
+  On Linux, the byte content of any token blob (live or profile)
+  appears only at the following paths:
+    - the live store file ~/.claude/.credentials.json (csm:EXT-006)
+    - the csm slot file ~/.claude-subscription-manager/keychain/<name>.json
+      (file mode 0600; parent dir mode 0700; csm:EXT-006)
+    - the ciphertext range of a csm:CON-009 export bundle (csm:POL-004)
+  No other filesystem path, no process stdout, and no process stderr
+  contains the plaintext bytes of a token blob.
+scope: every BEH path on Linux
+evidence: test_probe
+stability: contractual
+data_scope: all_data
+applicability:
+  applies_to: every BEH path on Linux
+  os: [linux]
+test_obligation:
+  predicate: |
+    For every BEH happy-path invocation on Linux, the captured stdout
+    and stderr buffers MUST NOT contain the bytes of any token blob;
+    a recursive snapshot of every file modified under HOME during the
+    call MUST contain those bytes only inside the documented sink
+    paths (live store, csm slot file, or ciphertext range of an
+    export bundle).
+  test_template: integration
+  boundary_classes: [each BEH path]
+  failure_scenarios:
+    - any blob substring observed in captured stdout       => violates INV
+    - any blob substring observed in profiles.json         => violates INV
+    - any blob substring observed outside the slot/live/ciphertext sinks => violates INV
+---
+```
+
+```yaml
+---
+id: csm:INV-007
+type: Invariant
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
+partition_id: csm
+title: token blob is never written outside the platform live/profile store on Windows
+never: |
+  On Windows, the byte content of any token blob (live or profile)
+  appears only at the following sinks:
+    - Windows Credential Manager target "Claude Code-credentials"
+      (live) or "Claude Code-credentials.profile.<name>" (csm slot),
+      both of type CRED_TYPE_GENERIC, persist=LOCAL_MACHINE
+      (csm:EXT-007)
+    - the stdin pipe of a short-lived child powershell.exe spawned
+      with -NoProfile -NonInteractive -Command -, terminated as soon
+      as the CredWrite returns
+    - the ciphertext range of a csm:CON-009 export bundle (csm:POL-004)
+  No other filesystem path, no command-line argv (the blob is passed
+  via stdin, never argv), and no captured stdout/stderr contains the
+  plaintext bytes of a token blob.
+scope: every BEH path on Windows
+evidence: test_probe
+stability: contractual
+data_scope: all_data
+applicability:
+  applies_to: every BEH path on Windows
+  os: [win32]
+test_obligation:
+  predicate: |
+    For every BEH happy-path invocation on Windows, the captured
+    stdout and stderr buffers MUST NOT contain the bytes of any token
+    blob; the child PowerShell invocation receives the blob via stdin
+    only (never via argv); a recursive snapshot of every file
+    modified under %USERPROFILE% during the call does NOT contain the
+    blob plaintext anywhere.
+  test_template: integration
+  boundary_classes: [each BEH path]
+  failure_scenarios:
+    - blob substring in captured stdout / stderr     => violates INV
+    - blob bytes passed as PowerShell -Command argv  => violates INV
+    - blob substring in any file under HOME          => violates INV
+---
+```
+
 ---
 
 ## 9. External dependencies
@@ -1850,14 +1963,17 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.606Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 provider: macOS Keychain Services via the `security` CLI
 provider_surface@version: macOS-security-CLI@macOS-14
 authority_url_or_doc: |
   Apple developer documentation: `man 1 security`
+applicability:
+  applies_to: every Behavior on macOS that reads or writes a token blob
+  os: [macos]
 consumer_contract: |
   csm invokes only:
     /usr/bin/security find-generic-password -s <service> -a <user> [-w]
@@ -1869,6 +1985,8 @@ consumer_contract: |
   Service names used: "Claude Code-credentials" (live, owned by Claude
   Code), "Claude Code-credentials.profile.<name>" (csm-owned).
   Account: process owner's username (os.userInfo().username).
+  See csm:EXT-006 (Linux) and csm:EXT-007 (Windows) for the
+  per-OS dispatch siblings.
 drift_detection:
   mechanism: none_with_review_by:2026-11-05
 auth_scope: not_applicable
@@ -1879,12 +1997,14 @@ error_taxonomy:
   - exit 51 => "interaction not allowed" (UI prompt rejected by user)
   - exit 25300 => password exists, -U flag missing (csm always passes -U)
 sandbox_or_fixture: not_applicable
-last_verified_at: "2026-05-05"
+last_verified_at: "2026-05-06"
 test_obligation:
   predicate: |
-    keychain.ts shells out to /usr/bin/security only with the argv
-    shapes listed in consumer_contract; no mutating verb other than
-    add-generic-password and delete-generic-password is invoked.
+    ChildProcess*CredentialStore adapters shell out to
+    /usr/bin/security only with the argv shapes listed in
+    consumer_contract; no mutating verb other than
+    add-generic-password and delete-generic-password is invoked;
+    these adapters are wired only when process.platform === "darwin".
   test_template: integration
   boundary_classes:
     - read existing item (exit 0)
@@ -1904,20 +2024,25 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.606Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 provider: macOS process inspection via `pgrep`
 provider_surface@version: macOS-pgrep-CLI@macOS-14
 authority_url_or_doc: |
   Apple developer documentation: `man 1 pgrep`
+applicability:
+  applies_to: csm:BEH-004 process-inspection step on macOS
+  os: [macos]
 consumer_contract: |
   csm invokes only:
     /usr/bin/pgrep -lf '(^|/)(claude|Claude\.app)'
   Exit 0 = matches found, stdout = `<pid> <command>` lines.
   Exit 1 = no matches (typed empty result, not an error).
   csm filters out itself by argv pattern `claudesub`, `node\b.*claudesub`.
+  See csm:EXT-008 (Linux /proc) and csm:EXT-009 (Windows tasklist)
+  for the per-OS dispatch siblings.
 drift_detection:
   mechanism: none_with_review_by:2026-11-05
 auth_scope: not_applicable
@@ -1928,12 +2053,13 @@ error_taxonomy:
   - exit 2 => syntax error (unreachable: argv is fixed)
   - exit 3 => no /proc-like access (unreachable on macOS)
 sandbox_or_fixture: not_applicable
-last_verified_at: "2026-05-05"
+last_verified_at: "2026-05-06"
 test_obligation:
   predicate: |
-    procCheck.ts invokes /usr/bin/pgrep with the exact pattern;
-    self-filter excludes claudesub processes; an empty match yields
-    an empty list, not an error.
+    ChildProcessUseProcessInspector invokes /usr/bin/pgrep with the
+    exact pattern; self-filter excludes claudesub processes; an empty
+    match yields an empty list, not an error; this adapter is wired
+    only when process.platform === "darwin".
   test_template: integration
   boundary_classes:
     - no claude processes => empty list
@@ -1951,9 +2077,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.606Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 provider: Anthropic Claude Code CLI
 provider_surface@version: claude-code@stable
@@ -2009,9 +2135,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.606Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 provider: Claude Code persistent state file ~/.claude.json
 provider_surface@version: claude-json@unversioned
@@ -2064,10 +2190,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T14:38:04.404Z
-    change_request: export/import feature
-    scope: cascade-from-pol-001
-    reviewed_test_oracle: tests/contracts-export.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 provider: Node.js standard library — `node:crypto`
 provider_surface@version: nodejs-crypto@node-18.17-or-newer
@@ -2118,6 +2243,265 @@ test_obligation:
 ---
 ```
 
+```yaml
+---
+id: csm:EXT-006
+type: ExternalDependency
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
+partition_id: csm
+provider: Claude Code on Linux — `~/.claude/.credentials.json` JSON file
+provider_surface@version: claude-code-linux-credentials@v1
+authority_url_or_doc: |
+  Behavior reverse-engineered from Anthropic Claude Code GitHub
+  issues #10039 ("Claude on Mac deletes the .credentials.json file
+  that claude on Linux uses") and #1414. Path and JSON shape are
+  observed, not contractually documented.
+consumer_contract: |
+  csm reads/writes the file ~/.claude/.credentials.json with shape:
+    { "claudeAiOauth": <object> }
+  The `claudeAiOauth` object is treated as an opaque token blob; csm
+  preserves its byte content verbatim across save / use / rm
+  operations and does not introspect its fields.
+  csm operations:
+    read live  : open ~/.claude/.credentials.json; if absent, raise
+                 LiveStoreNotFound (typed result, not an error).
+    write live : tmp + rename (atomic) into ~/.claude/.credentials.json,
+                 mode 0600 on creation, mode preserved on overwrite.
+    read slot  : open ~/.claude-subscription-manager/keychain/<name>.json,
+                 same shape; absent => SlotNotFound.
+    write slot : tmp + rename into the slot path, mode 0600.
+    delete slot: unlink the slot file; ENOENT => SlotNotFound (typed
+                 result, not an error).
+  csm coordinates writes to ~/.claude/.credentials.json with the same
+  ~/.claude.json.csm.lock convention as csm:CON-007.
+applicability:
+  applies_to: every Behavior on Linux that reads or writes a token blob
+  os: [linux]
+drift_detection:
+  mechanism: none_with_review_by:2026-11-05
+auth_scope: not_applicable
+rate_limits: not_applicable
+retry/idempotency: idempotent_with_key:path
+error_taxonomy:
+  - file absent on read live  => LiveStoreNotFound (typed result)
+  - file absent on read slot  => SlotNotFound (typed result)
+  - JSON parse failure        => exit 1, "Corrupt credentials file"
+  - rename(2) failure         => exit 1, partial state ruled out by
+                                 write-then-rename ordering
+sandbox_or_fixture: not_applicable
+last_verified_at: "2026-05-06"
+test_obligation:
+  predicate: |
+    LinuxFile*CredentialStore adapters touch only the documented
+    paths (~/.claude/.credentials.json and the slot directory under
+    the state dir); no /usr/bin/security or /usr/bin/pgrep is
+    invoked; live writes follow the lock + tmp + rename protocol.
+  test_template: integration
+  boundary_classes:
+    - read live (file present) => returns token blob
+    - read live (file absent)  => LiveStoreNotFound
+    - write live (creates file with mode 0600)
+    - write live (preserves mode 0600 if already present)
+    - read slot (present / absent)
+    - write slot (creates / overwrites)
+    - delete slot (present / already absent)
+  failure_scenarios:
+    - parent directory missing on write => mkdir recursive with mode 0700
+    - JSON parse failure                 => exit 1
+---
+```
+
+```yaml
+---
+id: csm:EXT-007
+type: ExternalDependency
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
+partition_id: csm
+provider: Windows Credential Manager via PowerShell + advapi32 P/Invoke
+provider_surface@version: windows-credential-manager@win10+
+authority_url_or_doc: |
+  Microsoft Learn — Credential Manager API
+  (https://learn.microsoft.com/en-us/windows/win32/api/wincred/);
+  observed Claude Code target name from GitHub issue #29049.
+consumer_contract: |
+  csm spawns powershell.exe with the flags
+    -NoProfile -NonInteractive -Command -
+  and pipes a one-shot script that calls into advapi32.dll via
+  `Add-Type` reflection (no third-party PowerShell module). The
+  script invokes only:
+    CredRead    (CRED_TYPE_GENERIC, target name = <T>)
+    CredWrite   (CRED_TYPE_GENERIC, target name = <T>,
+                 persist = LOCAL_MACHINE, blob = <UTF-8 bytes>)
+    CredDelete  (CRED_TYPE_GENERIC, target name = <T>)
+  Target names: "Claude Code-credentials" (live, owned by Claude
+  Code), "Claude Code-credentials.profile.<name>" (csm-owned).
+  UserName: os.userInfo().username (informational; not used for
+  lookup — Credential Manager keys on target name + type).
+  csm refuses to operate when invoked under MSYS / Git Bash
+  (process.env.MSYSTEM is defined): error message points at Claude
+  Code GitHub issue #29049 and instructs the user to run from
+  PowerShell or cmd.exe instead.
+applicability:
+  applies_to: every Behavior on Windows that reads or writes a token blob
+  os: [win32]
+drift_detection:
+  mechanism: none_with_review_by:2026-11-05
+auth_scope: not_applicable
+rate_limits: not_applicable
+retry/idempotency: not_applicable
+error_taxonomy:
+  - CredRead returns ERROR_NOT_FOUND   => StoreEntryNotFound (typed result)
+  - CredWrite returns non-zero         => exit 1, with Win32 error code
+  - CredDelete returns ERROR_NOT_FOUND => returns false (no-op delete)
+  - powershell.exe missing on PATH     => exit 1, "PowerShell required on Windows"
+  - MSYSTEM environment detected       => exit 1, "Run from PowerShell or cmd.exe"
+sandbox_or_fixture: not_applicable
+last_verified_at: "2026-05-06"
+test_obligation:
+  predicate: |
+    WindowsCm*CredentialStore adapters spawn only powershell.exe
+    with the documented flags; the embedded P/Invoke script invokes
+    only CredRead/CredWrite/CredDelete; no Invoke-Expression / iex
+    / external module load (Get-StoredCredential or any other
+    PowerShell module that wraps Credential Manager) appears in the
+    source.
+  test_template: integration
+  boundary_classes:
+    - read live (target present)  => returns blob
+    - read live (target absent)   => StoreEntryNotFound
+    - write live (creates target)
+    - write live (overwrites target)
+    - delete slot (present / absent)
+    - run under MSYS              => exit 1 with the documented error
+  failure_scenarios:
+    - powershell.exe missing on PATH => exit 1
+    - non-zero CredWrite return code => exit 1
+---
+```
+
+```yaml
+---
+id: csm:EXT-008
+type: ExternalDependency
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
+partition_id: csm
+provider: Linux process inspection via `/proc/*/cmdline`
+provider_surface@version: linux-procfs@5.x+
+authority_url_or_doc: |
+  `man 5 proc`, section /proc/[pid]/cmdline.
+consumer_contract: |
+  csm reads /proc/<pid>/cmdline directly via fs.readFile for every
+  numeric directory entry under /proc. Each cmdline file is a
+  NUL-separated argv list; csm joins it with single spaces for
+  matching. csm filters processes whose joined argv matches the
+  regex `(^|/)(claude|Claude\.app)\b` and excludes csm self by
+  process.pid and by the substring `claudesub`.
+  csm does not invoke `pgrep` on Linux (procfs is read directly).
+applicability:
+  applies_to: csm:BEH-004 process-inspection step on Linux
+  os: [linux]
+drift_detection:
+  mechanism: none_with_review_by:2026-11-05
+auth_scope: not_applicable
+rate_limits: not_applicable
+retry/idempotency: idempotent
+error_taxonomy:
+  - /proc absent           => exit 1, "Linux procfs not mounted"
+  - per-pid file disappears (race) => skipped silently
+  - permission denied on a per-pid cmdline => skipped silently
+sandbox_or_fixture: not_applicable
+last_verified_at: "2026-05-06"
+test_obligation:
+  predicate: |
+    ProcFsUseProcessInspector reads only /proc/<pid>/cmdline files;
+    self-process is excluded by pid and by substring; transient race
+    failures (file vanishes between readdir and readFile) do not
+    raise.
+  test_template: integration
+  boundary_classes:
+    - no claude processes => empty list
+    - one foreign claude process => list of one
+    - csm self process => never appears in the list
+    - per-pid file vanishes mid-scan => skipped without error
+  failure_scenarios:
+    - /proc not mounted => exit 1
+---
+```
+
+```yaml
+---
+id: csm:EXT-009
+type: ExternalDependency
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
+partition_id: csm
+provider: Windows process inspection via `tasklist.exe`
+provider_surface@version: windows-tasklist@win10+
+authority_url_or_doc: |
+  Microsoft Learn — tasklist
+  (https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/tasklist).
+consumer_contract: |
+  csm invokes only:
+    tasklist.exe /FO CSV /NH /V
+  and parses the CSV output. csm filters rows whose Image Name
+  starts with "claude" (case-insensitive) or whose Window Title
+  contains "Claude" or "claude". csm excludes its own pid.
+  Exit code 0 with empty rows = no matches.
+applicability:
+  applies_to: csm:BEH-004 process-inspection step on Windows
+  os: [win32]
+drift_detection:
+  mechanism: none_with_review_by:2026-11-05
+auth_scope: not_applicable
+rate_limits: not_applicable
+retry/idempotency: idempotent
+error_taxonomy:
+  - tasklist.exe missing on PATH => exit 1, "tasklist required on Windows"
+  - non-zero exit => exit 1 with the underlying message
+sandbox_or_fixture: not_applicable
+last_verified_at: "2026-05-06"
+test_obligation:
+  predicate: |
+    WindowsTasklistUseProcessInspector spawns only tasklist.exe with
+    the exact `/FO CSV /NH /V` argv; CSV parsing tolerates fields
+    containing commas (escaped per RFC 4180); self-pid is excluded.
+  test_template: integration
+  boundary_classes:
+    - no claude processes => empty list
+    - one claude.exe process => list of one
+    - csm self process => never appears
+  failure_scenarios:
+    - tasklist.exe missing on PATH => exit 1
+---
+```
+
 ## 10. Generated artifacts
 
 None. csm produces a TypeScript build in `dist/` via `tsc`, but the
@@ -2143,20 +2527,20 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T14:38:04.277Z
-    change_request: export/import feature
-    scope: cascade-from-pol-001
-    reviewed_test_oracle: tests/contracts-export.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: token blobs never written outside the macOS Keychain in plaintext
 policy_kind: pii_redaction
 applicability:
-  applies_to: every Behavior in §6 and every Contract in §7
+  applies_to: every Behavior in §6 and every Contract in §7 — macOS only
+  os: [macos]
 predicate: |
-  The csm process MUST NOT write the plaintext byte content of any
-  keychain blob (live or profile) to stdout, to stderr, to any file
-  under ~/.claude-subscription-manager/, to ~/.claude.json, or to
-  any other filesystem path. Two egress channels are permitted:
+  On macOS, the csm process MUST NOT write the plaintext byte content
+  of any keychain blob (live or profile) to stdout, to stderr, to any
+  file under ~/.claude-subscription-manager/, to ~/.claude.json, or
+  to any other filesystem path. Two egress channels are permitted:
     1. the argv of a child /usr/bin/security invocation (EXT-001),
        which the macOS process table exposes briefly to the same
        user only;
@@ -2166,6 +2550,10 @@ predicate: |
        the filesystem in this channel.
   Predicate amended in csm:DELTA-003 to add channel (2). See
   csm:POL-004 for the carve-out's preconditions and obligations.
+  See csm:POL-005 (Linux) and csm:POL-006 (Windows) for the per-OS
+  dispatch siblings — token plaintext IS permitted on Linux at the
+  documented file paths because Claude Code itself stores plaintext
+  there; that is recorded in POL-005, not as an exception here.
 negative_test_obligations:
   - run each BEH-001..010 happy and failure path while capturing
     stdout/stderr buffers and a recursive snapshot of every file
@@ -2198,30 +2586,36 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.669Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
-title: state directory and metadata files are local-user-only
+title: state directory and metadata files are local-user-only (POSIX)
 policy_kind: io_scope
 applicability:
-  applies_to: every Behavior that creates or rewrites files under
+  applies_to: every Behavior on macOS or Linux that creates or rewrites files under
               ~/.claude-subscription-manager/ or ~/.claude.json
+  os: [macos, linux]
 predicate: |
-  ensureStateDir creates ~/.claude-subscription-manager/ with mode
-  0700 and narrows the mode to 0700 if the directory already exists
-  with broader bits. profiles.json is written with mode 0600. The
-  active marker is written with mode 0600. The temporary file used
-  by the atomic-write protocol is created in the same parent
-  directory and inherits its mode-restricting umask. The
-  ~/.claude.json patch preserves the file's pre-patch mode.
+  On macOS and Linux, ensureStateDir creates
+  ~/.claude-subscription-manager/ with mode 0700 and narrows the mode
+  to 0700 if the directory already exists with broader bits.
+  profiles.json is written with mode 0600. The active marker is
+  written with mode 0600. The temporary file used by the atomic-write
+  protocol is created in the same parent directory and inherits its
+  mode-restricting umask. The ~/.claude.json patch preserves the
+  file's pre-patch mode. On Windows, mode bits are not enforced;
+  access is delegated to the NTFS default ACL inherited from
+  C:\Users\<name>\ (csm:ASM-004).
 negative_test_obligations:
-  - after every BEH-003/004/005/006 invocation, stat() the state
-    directory and assert mode 0700.
-  - after every BEH-003/004/005/006 invocation, stat() profiles.json
-    and active (when present) and assert mode 0600.
-  - pre-create the state directory with mode 0755; run BEH-003;
-    assert ensureStateDir narrows the mode to 0700.
+  - on macOS and Linux, after every BEH-003/004/005/006 invocation,
+    stat() the state directory and assert mode 0700.
+  - on macOS and Linux, after every BEH-003/004/005/006 invocation,
+    stat() profiles.json and active (when present) and assert mode 0600.
+  - on macOS and Linux, pre-create the state directory with mode 0755;
+    run BEH-003; assert ensureStateDir narrows the mode to 0700.
+  - on Windows, the file-mode assertions are skipped (ASM-004); only
+    the file-creation and atomic-write invariants are checked.
 test_obligation:
   predicate: same as negative_test_obligations
   test_template: integration
@@ -2243,9 +2637,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.669Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: refuse `use` while claude is running, unless --force
 policy_kind: concurrency_safety
@@ -2287,10 +2681,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T14:38:04.341Z
-    change_request: export/import feature
-    scope: cascade-from-pol-001
-    reviewed_test_oracle: tests/contracts-export.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 title: encrypted egress carve-out for keychain blobs (export bundle)
 policy_kind: pii_redaction
@@ -2347,6 +2740,115 @@ test_obligation:
 ---
 ```
 
+```yaml
+---
+id: csm:POL-005
+type: Policy
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
+partition_id: csm
+title: token blob egress confined to the Linux file store and ciphertext bundle
+policy_kind: pii_redaction
+applicability:
+  applies_to: every Behavior in §6 and every Contract in §7 — Linux only
+  os: [linux]
+predicate: |
+  On Linux, the csm process MUST NOT write the plaintext byte content
+  of any token blob (live or profile) to stdout, to stderr, to
+  ~/.claude.json, or to any filesystem path other than the following
+  permitted sinks:
+    1. the live store file ~/.claude/.credentials.json (csm:EXT-006),
+       which Claude Code itself reads/writes in plaintext;
+    2. the csm slot file
+       ~/.claude-subscription-manager/keychain/<name>.json
+       (mode 0600 inside a parent dir of mode 0700; csm:EXT-006);
+    3. the ciphertext range of a CON-009 export bundle file under
+       the additional restrictions of csm:POL-004 (AES-256-GCM
+       with a passphrase-derived key); plaintext blob bytes never
+       touch the filesystem in this channel.
+  The plaintext-on-disk allowance for sinks (1) and (2) is a
+  deliberate carve-out: it mirrors Claude Code's own Linux storage
+  shape and does not increase the attack surface beyond what the
+  user already accepts by running Claude Code on Linux.
+negative_test_obligations:
+  - run each BEH-001..010 happy and failure path on Linux while
+    capturing stdout/stderr buffers and a recursive snapshot of
+    every file modified under HOME; assert no buffer or file outside
+    the three documented sinks contains plaintext blob bytes.
+  - run BEH-003 on Linux with a sentinel byte sequence as the live
+    blob; assert the sentinel appears only inside the slot file (and
+    nowhere in stdout, stderr, profiles.json, or ~/.claude.json).
+test_obligation:
+  predicate: same as negative_test_obligations
+  test_template: integration
+  boundary_classes: [each BEH path on Linux]
+  failure_scenarios:
+    - blob substring observed in profiles.json => violates policy
+    - blob substring observed in ~/.claude.json => violates policy
+    - blob substring observed in stdout/stderr  => violates policy
+---
+```
+
+```yaml
+---
+id: csm:POL-006
+type: Policy
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
+partition_id: csm
+title: token blob egress confined to Windows Credential Manager and ciphertext bundle
+policy_kind: pii_redaction
+applicability:
+  applies_to: every Behavior in §6 and every Contract in §7 — Windows only
+  os: [win32]
+predicate: |
+  On Windows, the csm process MUST NOT write the plaintext byte
+  content of any token blob (live or profile) to stdout, to stderr,
+  to any filesystem path under %USERPROFILE%, or to the argv of any
+  child process. Two egress channels are permitted:
+    1. the stdin pipe of a short-lived child powershell.exe spawned
+       with -NoProfile -NonInteractive -Command -, where the inline
+       PowerShell script invokes CredWrite via advapi32.dll P/Invoke
+       and the blob is delivered on stdin (never on argv);
+    2. the ciphertext range of a CON-009 export bundle file under
+       the additional restrictions of csm:POL-004 (AES-256-GCM with
+       a passphrase-derived key); plaintext blob bytes never touch
+       the filesystem in this channel.
+  The plaintext blob is therefore observable only inside the live
+  PowerShell process memory and inside Windows Credential Manager
+  itself; both are scoped to the current user.
+negative_test_obligations:
+  - run each BEH-001..010 happy and failure path on Windows while
+    capturing stdout/stderr buffers and a recursive snapshot of
+    every file modified under %USERPROFILE%; assert no buffer or
+    file contains plaintext blob bytes.
+  - "source-level audit of WindowsCm*CredentialStore adapters: the
+    blob MUST be written to the child PowerShell stdin (process.stdin
+    on the spawned ChildProcess) and MUST NOT appear as an argv
+    element of the spawn() call."
+test_obligation:
+  predicate: same as negative_test_obligations
+  test_template: integration
+  boundary_classes: [each BEH path on Windows]
+  failure_scenarios:
+    - blob substring observed in any captured buffer => violates policy
+    - blob substring observed in any file under HOME => violates policy
+    - blob bytes passed via spawn argv               => violates policy
+---
+```
+
 ## 13. Constraints
 
 ```yaml
@@ -2358,29 +2860,36 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.732Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 constraint: |
-  Runtime platform is macOS only. csm depends on /usr/bin/security
-  (EXT-001) and /usr/bin/pgrep (EXT-002), which are not available on
-  Linux or Windows in compatible form.
+  Runtime platform is one of {macos, linux, win32}. csm dispatches
+  the OS-credential-store backend at runtime by `process.platform`:
+  macOS uses `/usr/bin/security` (csm:EXT-001) + `/usr/bin/pgrep`
+  (csm:EXT-002); Linux uses the file `~/.claude/.credentials.json`
+  (csm:EXT-006) + `/proc/*/cmdline` (csm:EXT-008); Windows uses
+  Windows Credential Manager via PowerShell + advapi32 P/Invoke
+  (csm:EXT-007) + `tasklist.exe` (csm:EXT-009). Any other value of
+  `process.platform` is rejected with exit 1 and a clear error.
 rationale: |
-  The macOS Keychain is the storage Claude Code itself uses on
-  macOS; csm exists to manage that storage. Cross-platform support is
-  scoped out (see §18) and tracked as csm:OQ-003.
+  The OS credential store is the storage Claude Code itself uses on
+  each OS; csm exists to manage that storage. Cross-platform
+  expansion is recorded in csm:DELTA-005 and resolves csm:OQ-003.
 test_obligation:
   predicate: |
-    csm refuses to start (or surfaces a clear error) on a non-macOS
-    platform; the README documents macOS as a hard requirement.
+    csm starts and operates on macOS, Linux, and Windows, dispatching
+    to the documented EXT for each. csm refuses to start with a clear
+    error on any other platform (e.g. freebsd, sunos, aix).
   test_template: contract
   boundary_classes:
-    - macOS host (operates normally)
-    - Linux host (security/pgrep paths missing => spawn ENOENT,
-      surfaced as Error from keychain.ts/procCheck.ts)
+    - macOS host    (operates via EXT-001 + EXT-002)
+    - Linux host    (operates via EXT-006 + EXT-008)
+    - Windows host  (operates via EXT-007 + EXT-009)
+    - FreeBSD host  (rejected with exit 1)
   failure_scenarios:
-    - any silent fallback to file-only credential storage => violates CST
+    - any silent fallback to a backend not listed for the host OS => violates CST
 ---
 ```
 
@@ -2393,9 +2902,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.732Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 constraint: |
   Node runtime must be >= 18.17 (engines.node = ">=18.17").
@@ -2424,9 +2933,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.732Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 constraint: |
   csm has zero runtime dependencies. package.json#dependencies is
@@ -2458,9 +2967,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.732Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 constraint: |
   Source layout follows Vertical Slice + Hexagonal architecture:
@@ -2529,10 +3038,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T14:38:04.468Z
-    change_request: export/import feature
-    scope: cascade-from-pol-001
-    reviewed_test_oracle: tests/contracts-export.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 baseline_version: csm:SUR-001@0.1.0
 kind: surface_member_added
@@ -2567,10 +3075,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T14:38:04.531Z
-    change_request: export/import feature
-    scope: cascade-from-pol-001
-    reviewed_test_oracle: tests/contracts-export.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 baseline_version: csm:SUR-003@0.1.0
 kind: surface_member_added
@@ -2603,10 +3110,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T14:38:04.594Z
-    change_request: export/import feature
-    scope: cascade-from-pol-001
-    reviewed_test_oracle: tests/contracts-export.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 baseline_version: csm:POL-001@v0.1.0
 kind: policy_predicate_amended
@@ -2654,10 +3160,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T15:21:42.584Z
-    change_request: binary-rename-claudesub
-    scope: binary-rename
-    reviewed_test_oracle: tests/cli-argv.test.ts
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 baseline_version: csm:SUR-001@1.0.0
 kind: surface_member_renamed
@@ -2697,6 +3202,74 @@ notes: |
 ---
 ```
 
+```yaml
+---
+id: csm:DELTA-005
+type: Delta
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
+partition_id: csm
+baseline_version: csm:CST-001@v0.1.0
+kind: constraint_amended
+summary: |
+  csm:CST-001 is amended from "Runtime platform is macOS only" to
+  "Runtime platform is one of {macos, linux, win32}, with per-OS
+  EXT dispatch". The expansion adds:
+    - csm:EXT-006 (Linux file-based live store) and csm:EXT-008
+      (Linux /proc-based process inspection)
+    - csm:EXT-007 (Windows Credential Manager via PowerShell +
+      advapi32 P/Invoke) and csm:EXT-009 (Windows tasklist
+      process inspection)
+    - csm:INV-006 / csm:INV-007 (per-OS token-blob containment)
+    - csm:POL-005 / csm:POL-006 (per-OS token egress policies)
+    - csm:ASM-004 (Windows file-mode delegation to NTFS ACL)
+  Existing macOS-only IDs (csm:EXT-001, csm:EXT-002, csm:INV-003,
+  csm:INV-004, csm:POL-001, csm:POL-002) are narrowed via
+  `applicability.os` to `[macos]` or `[macos, linux]` as
+  appropriate, with no change to their predicates on the platforms
+  they still apply to. csm:OQ-003 is resolved to `abstract_via_port`
+  by this delta.
+compatibility_action: migrate
+tests_old_behavior:
+  - csm:EXT-001 (macOS argv shapes still recognised on macOS)
+  - csm:EXT-002 (macOS pgrep filter unchanged on macOS)
+  - csm:INV-003 / csm:POL-002 (file modes 0700/0600 still asserted on macOS and Linux)
+  - csm:INV-004 / csm:POL-001 (token-blob containment still asserted on macOS)
+tests_new_behavior:
+  - csm:EXT-006 (Linux file-store contract)
+  - csm:EXT-007 (Windows Credential Manager contract)
+  - csm:EXT-008 (Linux /proc process inspection)
+  - csm:EXT-009 (Windows tasklist process inspection)
+  - csm:INV-006 (Linux token-blob containment)
+  - csm:INV-007 (Windows token-blob containment)
+  - csm:POL-005 (Linux egress policy)
+  - csm:POL-006 (Windows egress policy)
+  - "cli.ts dispatcher — process.platform=darwin / linux / win32 selects the documented adapter set; any other platform exits 1"
+notes: |
+  No data-at-rest migration is required: existing macOS users see no
+  change to ~/.claude-subscription-manager/, profiles.json, the
+  active marker, or the macOS Keychain service names. Linux and
+  Windows users start with an empty profile set on first run; their
+  state directory layout matches macOS (same paths under
+  ~/.claude-subscription-manager/, including a new
+  keychain/<name>.json sub-directory on Linux for token slots).
+
+  csm:SUR-001 (CLI argv) and csm:SUR-003 (state files) gain no new
+  members from this delta and their predicates on existing members
+  are unchanged on the platforms those members applied to (macOS,
+  and macOS+Linux respectively); whether the broadening of CST-001
+  alone forces a Surface bump is decided by `sdd ready` based on
+  ENF-004A semver-cascade rules and recorded in the same approval
+  cycle as this Delta.
+---
+```
+
 ## 16. Implementation bindings
 
 None at the partition level. Internal file-to-ID bindings are
@@ -2712,7 +3285,13 @@ explicitly layout-independent (SDD §3.2).
 id: csm:OQ-001
 type: Open-Q
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 question: |
   Refactor src/ to satisfy csm:CST-004 (Vertical Slice + Hexagonal)
@@ -2746,7 +3325,13 @@ owner: cyberash
 id: csm:OQ-002
 type: Open-Q
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 question: |
   Should csm ship a `claudesub repair` subcommand that detects
@@ -2775,7 +3360,13 @@ default_if_unresolved: defer_to_v0_2
 id: csm:OQ-003
 type: Open-Q
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 question: |
   Add Linux/Windows support? Linux Claude Code uses libsecret /
@@ -2792,6 +3383,17 @@ options:
       libsecret adapter and Windows Credential Manager adapter.
       Triples integration-test surface; introduces an explicit
       Linux/Windows acceptance gate.
+resolution:
+  selected_option: abstract_via_port
+  decided_at: "2026-05-06"
+  rationale: |
+    Investigation of Claude Code's actual cross-platform credential
+    storage (per Anthropic GitHub issues #1414, #10039 and #29049)
+    showed that Linux uses the file ~/.claude/.credentials.json
+    (NOT libsecret as initially hypothesized) and Windows uses
+    Windows Credential Manager. csm dispatches per-OS adapters at
+    runtime. See csm:DELTA-005, csm:EXT-006..EXT-009, csm:INV-006/007,
+    csm:POL-005/006.
 blocking: no
 owner: cyberash
 default_if_unresolved: stay_macos_only
@@ -2800,10 +3402,60 @@ default_if_unresolved: stay_macos_only
 
 ```yaml
 ---
+id: csm:OQ-004
+type: Open-Q
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
+partition_id: csm
+question: |
+  On Linux, should csm probe at runtime for libsecret / Secret
+  Service and prefer that backend when available, falling back to
+  the file ~/.claude/.credentials.json (csm:EXT-006) only when the
+  D-Bus daemon is absent? Anthropic's public docs for Claude Code
+  on Linux mention `libsecret-tools` as a setup prerequisite, but
+  the canonical token storage observed in the GitHub issue tracker
+  is the file. If a future Claude Code release prefers libsecret on
+  Linux, csm needs an additional adapter to read/write the same
+  store.
+options:
+  - label: file_only
+    consequence: |
+      csm reads/writes ~/.claude/.credentials.json on Linux only.
+      Smallest Linux surface; matches observed Claude Code
+      behaviour as of 2026-05-06. Any future Claude Code shift to
+      libsecret would silently desync until csm gains the additional
+      adapter.
+  - label: probe_libsecret_first
+    consequence: |
+      Add a runtime probe: try secret-tool / D-Bus first; on
+      ENOENT or org.freedesktop.secrets unavailable, fall back to
+      the file. Doubles the Linux integration-test surface
+      (libsecret + file paths). Requires a new EXT for the D-Bus
+      Secret Service contract.
+blocking: no
+owner: cyberash
+default_if_unresolved: file_only
+---
+```
+
+```yaml
+---
 id: csm:OQ-005
 type: Open-Q
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 question: |
   Does csm:DELTA-003 also force a major bump on csm:SUR-002
@@ -2837,7 +3489,13 @@ default_if_unresolved: leave_sur_002_at_0_1_0
 id: csm:ASM-001
 type: ASSUMPTION
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 assumption: |
   At most one csm process runs concurrently per user. The lock at
@@ -2863,7 +3521,13 @@ tests:
 id: csm:ASM-002
 type: ASSUMPTION
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 assumption: |
   The user has either granted "Always Allow" for the live keychain
@@ -2887,7 +3551,13 @@ tests:
 id: csm:ASM-003
 type: ASSUMPTION
 lifecycle:
-  status: proposed
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
 partition_id: csm
 assumption: |
   ~/.claude.json#oauthAccount.subscriptionType is absent today; csm
@@ -2908,9 +3578,46 @@ tests:
 ---
 ```
 
+```yaml
+---
+id: csm:ASM-004
+type: ASSUMPTION
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
+partition_id: csm
+assumption: |
+  On Windows, file-mode bits (0700/0600) are not enforced by Node on
+  win32 (`fs.chmod` is a no-op or partial); access protection for
+  ~/.claude-subscription-manager/, profiles.json, the active marker,
+  and the per-profile slot files is delegated to the NTFS default
+  ACL inherited from C:\Users\<name>\, which restricts read+write
+  to the current user and SYSTEM. csm does not call SetSecurityInfo
+  / icacls to tighten ACLs further.
+source_open_q: null
+blocking: no
+review_by: "2026-08-06"
+default_if_unresolved: |
+  Document the ACL trust model in README. csm does not ship an
+  explicit ACL hardening step; users on multi-user Windows hosts
+  with non-default home-directory ACLs accept that csm state is
+  visible to whoever can read their user profile.
+tests:
+  - csm:INV-003
+  - csm:POL-002
+---
+```
+
 ## 19. Out of scope
 
-- Linux and Windows runtime support (tracked as csm:OQ-003).
+- Operating systems other than {macos, linux, win32} — FreeBSD,
+  OpenBSD, Solaris/SunOS, AIX, and similar minor Unix variants are
+  rejected at startup with a clear error (csm:CST-001).
 - Anthropic Console / API-key authentication (`claude auth login
   --console`). csm reads and writes only the `claude.ai` OAuth
   account state.

@@ -1,0 +1,10 @@
+plan_id: 2026-05-06T183140Z-cxplt
+created_at: 2026-05-06T18:31:40.355Z
+pending_attestations:
+  - id: csm:*
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T18:31:40.354Z
+    change_request: cross-platform-support
+    scope: cross-platform
+    target_status: approved
