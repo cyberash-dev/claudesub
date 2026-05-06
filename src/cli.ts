@@ -68,6 +68,11 @@ import { NodeImportFileReader } from "./features/import/adapters/outbound/NodeIm
 import { NodeCryptoImportCipher } from "./features/import/adapters/outbound/NodeCryptoImportCipher.js";
 import { NodeImportActiveMarker } from "./features/import/adapters/outbound/NodeImportActiveMarker.js";
 
+import { GetUsage } from "./features/usage/application/GetUsage.js";
+import { CliUsageHandler } from "./features/usage/adapters/inbound/CliUsageHandler.js";
+import { HttpsAnthropicUsageReader } from "./features/usage/adapters/outbound/HttpsAnthropicUsageReader.js";
+import { LiveTokenFromCredentialStoreReader } from "./features/usage/adapters/outbound/LiveTokenFromCredentialStoreReader.js";
+
 const HELP = `claudesub — switch between Claude Code OAuth subscriptions.
 
 Usage:
@@ -80,6 +85,7 @@ Usage:
   claudesub add <name>
   claudesub export <file>
   claudesub import <file> [--overwrite] [--overwrite-active]
+  claudesub usage [--json]
   claudesub --help | --version
 
 Profiles are stored in your OS credential store and the metadata file
@@ -97,6 +103,7 @@ Notes:
   - Windows: run from PowerShell or cmd.exe — MSYS / Git Bash cannot reach Credential Manager (claude-code#29049).
   - "export" writes an encrypted bundle (AES-256-GCM with a passphrase-derived key) to <file>; the passphrase is prompted twice and never persisted.
   - "import" prompts for the passphrase once. By default it skips profiles that already exist; --overwrite replaces them, and --overwrite-active is required to overwrite the currently active profile.
+  - "usage" calls Anthropic's undocumented /api/oauth/usage endpoint with the access token from your live store. If you haven't used \`claude\` recently, the token may be expired (rotates ~hourly); run \`claude\` once and retry.
 `;
 
 interface Wired {
@@ -109,6 +116,7 @@ interface Wired {
   add: CliAddHandler;
   export: CliExportHandler;
   import: CliImportHandler;
+  usage: CliUsageHandler;
 }
 
 function wire(): Wired {
@@ -188,6 +196,11 @@ function wire(): Wired {
     new NodeImportActiveMarker(paths.markerPath),
   );
 
+  const usageCmd = new GetUsage(
+    new LiveTokenFromCredentialStoreReader(adapters.useStore),
+    new HttpsAnthropicUsageReader(),
+  );
+
   return {
     list: new CliListHandler(listCmd),
     status: new CliStatusHandler(statusCmd),
@@ -198,6 +211,7 @@ function wire(): Wired {
     add: new CliAddHandler(addCmd),
     export: new CliExportHandler(exportCmd),
     import: new CliImportHandler(importCmd),
+    usage: new CliUsageHandler(usageCmd),
   };
 }
 
@@ -228,6 +242,7 @@ async function main(argv: string[]): Promise<CliExitCode> {
     case "add":    return handlers.add.run(rest);
     case "export": return handlers.export.run(rest);
     case "import": return handlers.import.run(rest);
+    case "usage":  return handlers.usage.run(rest);
     default:
       process.stderr.write(`Unknown command: ${command}\n\n${HELP}`);
       return EXIT_USAGE;

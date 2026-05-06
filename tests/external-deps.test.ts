@@ -398,6 +398,111 @@ describe("EXT-006 / EXT-007 live credential-store round-trip", () => {
   });
 });
 
+describe("EXT-010 Anthropic OAuth usage endpoint", () => {
+  const READER_PATH = "features/usage/adapters/outbound/HttpsAnthropicUsageReader.ts";
+  const HANDLER_PATH = "features/usage/adapters/inbound/CliUsageHandler.ts";
+
+  // @covers csm:EXT-010
+  test("HttpsAnthropicUsageReader uses only node:https from Node stdlib", async () => {
+    const code = await readFile(join(SRC_ROOT, READER_PATH), "utf8");
+    const importLines = code.match(/^import .*?from "([^"]+)"/gm) ?? [];
+    for (const line of importLines) {
+      const match = line.match(/from "([^"]+)"/);
+      if (!match) continue;
+      const target = match[1]!;
+      if (target.startsWith("node:")) {
+        assert.equal(target, "node:https", `${READER_PATH} imports unexpected node module "${target}"`);
+        continue;
+      }
+      assert.match(target, /^\.\.\/\.\.\//, `${READER_PATH} imports unexpected non-relative module "${target}"`);
+    }
+  });
+
+  // @covers csm:EXT-010
+  test("HttpsAnthropicUsageReader pins the documented URL and beta header verbatim", async () => {
+    const code = await readFile(join(SRC_ROOT, READER_PATH), "utf8");
+    assert.ok(
+      code.includes('"https://api.anthropic.com/api/oauth/usage"'),
+      "URL constant must be the documented one verbatim",
+    );
+    assert.ok(
+      code.includes('"oauth-2025-04-20"'),
+      "anthropic-beta header value must be the documented one verbatim",
+    );
+    assert.match(code, /method:\s*"GET"/, "must issue GET only");
+  });
+
+  // @covers csm:EXT-010
+  test("HttpsAnthropicUsageReader carries the Authorization header (no other auth surface)", async () => {
+    const code = await readFile(join(SRC_ROOT, READER_PATH), "utf8");
+    assert.match(code, /authorization:\s*`Bearer \$\{accessToken\}`/);
+    assert.equal(code.includes("X-API-Key"), false, "must not send X-API-Key");
+    assert.equal(code.includes("x-api-key"), false, "must not send x-api-key");
+  });
+
+  // @covers csm:EXT-010
+  // @covers csm:POL-001
+  // @covers csm:POL-005
+  // @covers csm:POL-006
+  test("the bearer token never reaches stdout / stderr / log calls in the reader source", async () => {
+    const code = await readFile(join(SRC_ROOT, READER_PATH), "utf8");
+    const FORBIDDEN_LOGGERS_WITH_TOKEN = [
+      /console\.log\([^)]*accessToken/,
+      /console\.error\([^)]*accessToken/,
+      /process\.stdout\.write\([^)]*accessToken/,
+      /process\.stderr\.write\([^)]*accessToken/,
+      /console\.log\([^)]*authorization/i,
+    ];
+    for (const rx of FORBIDDEN_LOGGERS_WITH_TOKEN) {
+      assert.equal(rx.test(code), false, `must not log the bearer: matched ${rx}`);
+    }
+    assert.match(code, /redactBearer/, "must define a redactBearer helper for echoing 4xx response bodies");
+  });
+
+  // @covers csm:EXT-010
+  test("HttpsAnthropicUsageReader sets a 10-second timeout via AbortSignal", async () => {
+    const code = await readFile(join(SRC_ROOT, READER_PATH), "utf8");
+    assert.match(code, /AbortSignal\.timeout\s*\(\s*TIMEOUT_MS\s*\)/);
+    assert.match(code, /TIMEOUT_MS\s*=\s*10[_]?000/);
+  });
+
+  // @covers csm:EXT-010
+  test("CliUsageHandler does not import node:https (network only at the adapter boundary)", async () => {
+    const code = await readFile(join(SRC_ROOT, HANDLER_PATH), "utf8");
+    assert.equal(code.includes("node:https"), false);
+    assert.equal(code.includes("node:http"), false);
+    assert.equal(/\bspawn\(/.test(code), false);
+  });
+
+  // @covers csm:EXT-010
+  test("usage slice imports no third-party HTTP library (CST-003 zero-deps)", async () => {
+    const slice = "features/usage/";
+    const files = await collectTsFiles(join(SRC_ROOT, slice));
+    for (const f of files) {
+      const code = await readFile(f, "utf8");
+      const importLines = code.match(/^import .*?from "([^"]+)"/gm) ?? [];
+      for (const line of importLines) {
+        const target = line.match(/from "([^"]+)"/)![1]!;
+        const isStdlib = target.startsWith("node:");
+        const isRelative = target.startsWith(".");
+        assert.ok(isStdlib || isRelative, `${f} imports unexpected third-party module "${target}"`);
+      }
+    }
+  });
+});
+
+async function collectTsFiles(dir: string): Promise<string[]> {
+  const out: string[] = [];
+  const { readdir } = await import("node:fs/promises");
+  const entries = await readdir(dir, { withFileTypes: true });
+  for (const e of entries) {
+    const full = join(dir, e.name);
+    if (e.isDirectory()) out.push(...await collectTsFiles(full));
+    else if (e.isFile() && full.endsWith(".ts")) out.push(full);
+  }
+  return out;
+}
+
 function matchedVerbs(code: string): Set<string> {
   const found = new Set<string>();
   const allKnownVerbs = [...ALLOWED_SECURITY_VERBS, ...FORBIDDEN_SECURITY_VERBS];

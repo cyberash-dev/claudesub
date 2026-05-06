@@ -167,4 +167,18 @@ describe("Export/import argv (CON-008)", () => {
     assert.match(r.stdout, /\bclaudesub import <file>/);
     assert.match(r.stdout, /--overwrite-active/);
   });
+
+  // @covers csm:CON-001
+  // @covers csm:DELTA-006
+  test("HELP banner advertises the `usage` subcommand", async () => {
+    const r = await runIsolated(["--help"]);
+    assert.match(r.stdout, /\bclaudesub usage \[--json\]/);
+  });
+
+  // @covers csm:CON-001
+  test("`claudesub usage --bogus` exits 1 from parseArgs strict mode", async () => {
+    const r = await runIsolated(["usage", "--bogus"]);
+    assert.equal(r.exitCode, 1);
+    assert.match(r.stderr, /error:.*unknown/i);
+  });
 });

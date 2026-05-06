@@ -229,6 +229,35 @@ export class IdentityCipher {
   }
 }
 
+export class FakeUsageLiveTokenReader {
+  token: string | null = "test-access-token";
+  async readAccessToken(): Promise<string> {
+    if (this.token === null) {
+      const { LiveAccessTokenMissing } = await import(
+        "../src/features/usage/ports/outbound/UsageLiveTokenReader.js"
+      );
+      throw new LiveAccessTokenMissing();
+    }
+    return this.token;
+  }
+}
+
+export class FakeUsageReader {
+  report: import("../src/features/usage/domain/UsageReport.js").UsageReport | null = null;
+  throwOnFetch: Error | null = null;
+  receivedTokens: string[] = [];
+  async fetch(
+    accessToken: string,
+  ): Promise<import("../src/features/usage/domain/UsageReport.js").UsageReport> {
+    this.receivedTokens.push(accessToken);
+    if (this.throwOnFetch) throw this.throwOnFetch;
+    if (this.report === null) {
+      throw new Error("FakeUsageReader: no canned report and no throwOnFetch set");
+    }
+    return JSON.parse(JSON.stringify(this.report));
+  }
+}
+
 export function makeProfile(overrides: Partial<ProfileMetadata> = {}): ProfileMetadata {
   return {
     name: "test",

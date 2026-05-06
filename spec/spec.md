@@ -143,9 +143,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 discovery_scope:
   - src
@@ -187,12 +187,12 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 name: csm/cli
-version: "2.0.0"
+version: "2.1.0"
 boundary_type: cli
 members:
   - csm:CON-001
@@ -202,11 +202,12 @@ consumer_compat_policy: semver_per_surface
 notes: |
   Argv shape and exit-code taxonomy for the `claudesub` binary.
   Stable identifiers: subcommand names (list, status, save, use, rm,
-  rename, add, export, import) and their flag long-names. Bump
-  history: 0.1.0 → 1.0.0 (csm:DELTA-003 POL-001 predicate amendment,
-  csm:DELTA-001 export/import argv additive); 1.0.0 → 2.0.0
-  (csm:DELTA-004 binary rename `claude-sub` → `claudesub`,
-  predicate-breaking on every CON-001 schema row).
+  rename, add, export, import, usage) and their flag long-names.
+  Bump history: 0.1.0 → 1.0.0 (csm:DELTA-003 POL-001 predicate
+  amendment, csm:DELTA-001 export/import argv additive); 1.0.0 →
+  2.0.0 (csm:DELTA-004 binary rename `claude-sub` → `claudesub`,
+  predicate-breaking on every CON-001 schema row); 2.0.0 → 2.1.0
+  (csm:DELTA-006 additive `usage` subcommand).
 ---
 ```
 
@@ -219,21 +220,23 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 name: csm/json-output
-version: "0.1.0"
+version: "0.2.0"
 boundary_type: cli
 members:
   - csm:CON-003
   - csm:CON-004
+  - csm:CON-010
 consumer_compat_policy: semver_per_surface
 notes: |
-  JSON shapes printed by `--json` flag of `list` and `status`. Stable
-  field names; additive minor bumps allowed; structural changes are
-  major.
+  JSON shapes printed by `--json` flag of `list`, `status`, and
+  `usage`. Stable field names; additive minor bumps allowed;
+  structural changes are major. Bump history: 0.1.0 → 0.2.0
+  (csm:DELTA-006 adds csm:CON-010 — `claudesub usage --json` shape).
 ---
 ```
 
@@ -246,9 +249,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 name: csm/state-files
 version: "1.0.0"
@@ -279,9 +282,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: claudesub list — print profiles with active marker
 given: |
@@ -343,9 +346,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: claudesub status — report active profile, live auth status, desync
 given: |
@@ -408,9 +411,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: claudesub save — snapshot live credentials into a named profile
 given: |
@@ -483,9 +486,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: claudesub use — swap credentials with auto-snapshot and verification
 given: |
@@ -571,9 +574,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: claudesub rm — delete profile metadata and keychain slot, leave live untouched
 given: |
@@ -632,9 +635,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: claudesub rename — move keychain slot, update profiles.json, update marker
 given: |
@@ -692,9 +695,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: claudesub add — orchestrate logout, login, save under one name
 given: |
@@ -752,9 +755,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: claudesub usage errors — exit 2 on unknown command and missing positional
 given: |
@@ -811,9 +814,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: claudesub export — write all profiles to an encrypted bundle file
 given: |
@@ -901,9 +904,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: claudesub import — load profiles from an encrypted bundle, skip-by-default on conflict
 given: |
@@ -1008,6 +1011,94 @@ test_obligation:
 ---
 ```
 
+```yaml
+---
+id: csm:BEH-011
+type: Behavior
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
+partition_id: csm
+title: claudesub usage — print subscription utilization for the active profile
+given: |
+  - the live store contains a parseable JSON blob with a non-empty
+    `claudeAiOauth.accessToken` (csm:EXT-001 on macOS, csm:EXT-006 on
+    Linux, csm:EXT-007 on Windows)
+  - the host has outbound network reachability to api.anthropic.com
+when: user runs `claudesub usage` (with optional --json)
+then: |
+  process exits 0 after these ordered steps:
+    1. read the live store via the platform-dispatched live-store
+       adapter and parse out claudeAiOauth.accessToken;
+    2. issue an HTTPS GET to csm:EXT-010
+       (https://api.anthropic.com/api/oauth/usage) carrying only the
+       Authorization, anthropic-beta, accept, and user-agent headers;
+    3. on HTTP 200, parse the response body and assemble a
+       UsageReport (csm:CON-010) with one bucket per documented id
+       (`five_hour`, `seven_day`, `seven_day_sonnet`, `seven_day_opus`)
+       plus an `extra` block when the response carries `extra_usage`;
+    4. when --json is absent, print one line per bucket sorted in the
+       order [five_hour, seven_day, seven_day_sonnet, seven_day_opus]
+       in the form `<label>: <NN>% (resets in <H>h<M>m | resets <day> <HH:MM>)`,
+       and when `extra` is present a final line
+       `extra credits: $<used> / $<limit> used`;
+    5. when --json is present, print the verbatim CON-010 JSON document
+       followed by a single LF.
+  The bearer token is never written to stdout, stderr, or any file
+  (csm:POL-001 / POL-005 / POL-006). Only utilization percentages,
+  reset timestamps, and (if enabled) the extra-credits dollar amounts
+  reach the user-visible output.
+negative_cases:
+  - "live store missing or unparseable => exit 1, error 'Live store has no claudeAiOauth.accessToken — log in via `claude auth login` first.'"
+  - "HTTP 401 => exit 1, error 'Live access token rejected. Run `claude` once to refresh, then retry.'"
+  - "HTTP 4xx (other) => exit 1, error 'Anthropic usage endpoint returned <status> with redacted body'"
+  - "HTTP 5xx or network unreachable or timeout => exit 1, error 'Anthropic usage endpoint unavailable: <reason>'"
+  - "response body does not parse as JSON or is missing the documented bucket shape => exit 1, error 'Anthropic usage endpoint returned an unexpected shape — see csm:OQ-006'"
+out_of_scope:
+  - per-profile usage (csm:OQ-006 follow-up); v1 is active-only
+  - refreshing the access token; csm relies on Claude Code's own
+    refresh and surfaces 401 verbatim (csm:ASM-005)
+  - caching the response on disk
+applicability:
+  invariant_to_all_axes: true
+concurrency_model:
+  actor_concurrency: single_per_process
+  read_consistency: strong
+  idempotency: none
+  time_source: wall_clock:1s
+data_scope: all_data
+policy_refs:
+  - csm:POL-001
+  - csm:POL-005
+  - csm:POL-006
+test_obligation:
+  predicate: |
+    Given a fake UsageReader returning a canned UsageReport, the
+    handler emits the documented human-format output (sorted, with
+    optional extra-credits line) on the default path and a verbatim
+    CON-010 JSON document on --json. Given a fake that throws
+    TokenExpiredError / NetworkError / token-missing, the handler
+    surfaces the documented error string and exits 1. The bearer
+    token never appears in any captured stdout/stderr buffer.
+  test_template: integration
+  boundary_classes:
+    - happy path (4 buckets, extra enabled)
+    - happy path (4 buckets, extra disabled => extra block null)
+    - --json round-trip (parseable, schema valid)
+    - token missing in live store => exit 1
+    - 401 token rejected => exit 1, "run claude once" hint
+    - 5xx / network unreachable => exit 1, "endpoint unavailable"
+    - malformed response => exit 1, "unexpected shape"
+  failure_scenarios:
+    - "bearer substring observed in captured stdout/stderr => violates csm:INV-004 / csm:INV-006 / csm:INV-007 depending on host OS"
+---
+```
+
 ## 7. Data contracts
 
 ```yaml
@@ -1019,9 +1110,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: claudesub argv shape per subcommand
 surface_ref: csm:SUR-001
@@ -1039,6 +1130,7 @@ schema: |
   claudesub rename <old> <new>
   claudesub mv     <old> <new>              # alias of rename
   claudesub add    <name>
+  claudesub usage  [--json]
 preconditions: |
   - <name> matches `^[a-zA-Z0-9._-]{1,64}$`
   - all flags are long-form except `-y` (alias of --yes), `-h`
@@ -1047,7 +1139,7 @@ postconditions: |
   - parseArgs runs in strict mode; unknown flags throw and main
     catches the Error, printing "error: <message>" and exiting 1
 external_identifiers:
-  - "subcommand names: list, status, save, use, rm, remove, delete, rename, mv, add"
+  - "subcommand names: list, status, save, use, rm, remove, delete, rename, mv, add, usage"
   - "flag names: --json, --overwrite, --force, --no-verify, --yes (-y), --help (-h), --version (-v)"
 compatibility_rules:
   - adding a new subcommand or a new flag is a minor bump
@@ -1086,9 +1178,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: claudesub exit-code taxonomy
 surface_ref: csm:SUR-001
@@ -1136,9 +1228,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: claudesub list --json output shape
 surface_ref: csm:SUR-002
@@ -1203,9 +1295,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: claudesub status --json output shape
 surface_ref: csm:SUR-002
@@ -1277,9 +1369,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: profiles.json on-disk schema
 surface_ref: csm:SUR-003
@@ -1349,9 +1441,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: active marker file format
 surface_ref: csm:SUR-003
@@ -1401,9 +1493,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: ~/.claude.json patch protocol (mutated fields only)
 surface_ref: csm:SUR-003
@@ -1465,9 +1557,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: claudesub export / import argv shape
 surface_ref: csm:SUR-001
@@ -1534,9 +1626,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: encrypted export bundle file format (csm export)
 surface_ref: csm:SUR-003
@@ -1634,6 +1726,88 @@ test_obligation:
 ---
 ```
 
+```yaml
+---
+id: csm:CON-010
+type: Contract
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
+partition_id: csm
+title: claudesub usage --json output shape
+surface_ref: csm:SUR-002
+schema: |
+  {
+    "buckets": [
+      {
+        "id":                   "five_hour" | "seven_day" | "seven_day_sonnet" | "seven_day_opus",
+        "utilizationPercent":   <number 0..100>,
+        "resetsAt":             <iso8601-string>
+      }, ...
+    ],
+    "extra": {
+      "monthlyLimitUsdMinor":   <integer | null>,
+      "usedUsdMinor":           <integer>
+    } | null,
+    "fetchedAt":                <iso8601-string>
+  }
+preconditions: |
+  - the response from csm:EXT-010 parsed successfully
+  - every bucket id present in the response is one of the four
+    documented values above; unknown bucket ids are dropped
+postconditions: |
+  - buckets are sorted in the order
+    [five_hour, seven_day, seven_day_sonnet, seven_day_opus]
+  - utilizationPercent is clamped into [0, 100] from the raw value
+  - extra is null when the response carries no extra_usage block or
+    the block has both monthlyLimitUsdMinor null and usedUsdMinor 0
+  - fetchedAt is the ISO timestamp of the moment csm received the
+    response
+external_identifiers:
+  - "top-level keys: buckets, extra, fetchedAt"
+  - "bucket keys: id, utilizationPercent, resetsAt"
+  - "extra keys: monthlyLimitUsdMinor, usedUsdMinor"
+  - "bucket id enum: five_hour | seven_day | seven_day_sonnet | seven_day_opus"
+compatibility_rules:
+  - adding a new top-level key is a minor bump
+  - adding a new bucket id is a minor bump (consumers ignore unknowns)
+  - removing or renaming any documented key is a major bump
+  - changing the type of a value is a major bump
+applicability:
+  invariant_to_all_axes: true
+concurrency_model:
+  actor_concurrency: single_per_process
+  read_consistency: read_your_writes
+  idempotency: none
+  time_source: wall_clock:1s
+data_scope: new_writes_only
+policy_refs:
+  - csm:POL-001
+  - csm:POL-005
+  - csm:POL-006
+error_taxonomy:
+  - response missing required keys => exit 1, "unexpected shape"
+  - utilizationPercent not a finite number => exit 1, "unexpected shape"
+test_obligation:
+  predicate: |
+    Output parses as JSON; bucket ids belong to the documented enum;
+    bucket order matches the documented sort; utilizationPercent is
+    a finite number in [0,100]; extra is null or carries both fields.
+    No bearer token substring appears anywhere in the document.
+  test_template: contract
+  boundary_classes:
+    - 4 buckets, extra enabled
+    - 4 buckets, extra disabled (extra=null)
+    - response carries an unknown 5th bucket id (dropped)
+    - response carries no extra_usage at all (extra=null)
+---
+```
+
 ## 8. Invariants
 
 ```yaml
@@ -1645,9 +1819,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: profile names are unique within profiles.json
 always: |
@@ -1683,9 +1857,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: active marker, when present, names a profile in profiles.json
 always: |
@@ -1724,9 +1898,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: state directory mode 0700, profiles.json and active mode 0600 (POSIX)
 always: |
@@ -1773,9 +1947,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: token blob is never written outside the platform live/profile store on macOS
 never: |
@@ -1814,9 +1988,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: post-use accountUuid alignment between live JSON and target profile
 always: |
@@ -1860,9 +2034,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: token blob is never written outside the platform live/profile store on Linux
 never: |
@@ -1907,9 +2081,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: token blob is never written outside the platform live/profile store on Windows
 never: |
@@ -1963,9 +2137,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 provider: macOS Keychain Services via the `security` CLI
 provider_surface@version: macOS-security-CLI@macOS-14
@@ -2024,9 +2198,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 provider: macOS process inspection via `pgrep`
 provider_surface@version: macOS-pgrep-CLI@macOS-14
@@ -2077,9 +2251,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 provider: Anthropic Claude Code CLI
 provider_surface@version: claude-code@stable
@@ -2135,9 +2309,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 provider: Claude Code persistent state file ~/.claude.json
 provider_surface@version: claude-json@unversioned
@@ -2190,9 +2364,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 provider: Node.js standard library — `node:crypto`
 provider_surface@version: nodejs-crypto@node-18.17-or-newer
@@ -2252,9 +2426,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 provider: Claude Code on Linux — `~/.claude/.credentials.json` JSON file
 provider_surface@version: claude-code-linux-credentials@v1
@@ -2327,9 +2501,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 provider: Windows Credential Manager via PowerShell + advapi32 P/Invoke
 provider_surface@version: windows-credential-manager@win10+
@@ -2402,9 +2576,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 provider: Linux process inspection via `/proc/*/cmdline`
 provider_surface@version: linux-procfs@5.x+
@@ -2458,9 +2632,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 provider: Windows process inspection via `tasklist.exe`
 provider_surface@version: windows-tasklist@win10+
@@ -2502,6 +2676,84 @@ test_obligation:
 ---
 ```
 
+```yaml
+---
+id: csm:EXT-010
+type: ExternalDependency
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
+partition_id: csm
+provider: Anthropic OAuth subscription-usage endpoint
+provider_surface@version: anthropic-oauth-usage@oauth-2025-04-20
+authority_url_or_doc: |
+  Endpoint is undocumented in Anthropic's public API reference. Its
+  shape was reverse-engineered from Claude Code's bundled cli.js
+  (`/api/oauth/usage`) and is also surfaced by the community tool
+  `ccusage` (https://pypi.org/project/ccusage/). The required header
+  `anthropic-beta: oauth-2025-04-20` is the Claude Code OAuth-beta
+  marker shared by Claude Code itself.
+consumer_contract: |
+  csm issues exactly one HTTP request per `claudesub usage` call:
+    method:  GET
+    url:     https://api.anthropic.com/api/oauth/usage
+    headers:
+      Authorization: Bearer <claudeAiOauth.accessToken>
+      anthropic-beta: oauth-2025-04-20
+      accept: application/json
+      user-agent: claudesub/<package.json#version>
+    body:    none
+  csm reads the response body as UTF-8 JSON and projects it into
+  csm:CON-010. csm does NOT cache the response on disk and does NOT
+  retry on any error. csm sets a 10-second connect+response
+  timeout via AbortSignal.timeout(10_000).
+applicability:
+  applies_to: csm:BEH-011 only
+  invariant_to_all_axes: true
+drift_detection:
+  mechanism: contract_test_against_sandbox
+auth_scope: |
+  Bearer token from the live store (csm:EXT-001 / csm:EXT-006 /
+  csm:EXT-007). csm does not request scopes; it relies on the scopes
+  Claude Code itself granted at login time. csm never refreshes the
+  token (csm:ASM-005 — Claude Code rotates hourly while active).
+rate_limits: not_applicable
+retry/idempotency: idempotent-by-construction (read-only GET, no retry)
+error_taxonomy:
+  - "HTTP 200 with parseable body => UsageReport"
+  - "HTTP 401 => TokenExpiredError ('Live access token rejected. Run `claude` once to refresh, then retry.')"
+  - "HTTP 4xx (other) => Error with status + redacted body"
+  - "HTTP 5xx / network / timeout => Error ('Anthropic usage endpoint unavailable: <reason>')"
+  - "body not JSON / unexpected shape => Error ('unexpected shape — see csm:OQ-006')"
+sandbox_or_fixture: |
+  No sandbox is offered by the provider. Drift surfaces as a
+  parse failure or an HTTP 4xx; csm:OQ-006 tracks the long-term
+  stability risk.
+last_verified_at: "2026-05-06"
+test_obligation:
+  predicate: |
+    HttpsAnthropicUsageReader spawns no child process and uses only
+    `node:https` from the Node standard library; the URL constant is
+    "https://api.anthropic.com/api/oauth/usage" verbatim; the
+    `anthropic-beta: oauth-2025-04-20` header is set verbatim; the
+    bearer token never appears in any captured stdout/stderr buffer
+    nor in any error message printed to the user; no third-party HTTP
+    library is imported by the source.
+  test_template: integration
+  boundary_classes:
+    - HTTP 200 happy path => UsageReport
+    - HTTP 401            => TokenExpiredError
+    - HTTP 5xx            => network error
+    - timeout             => network error
+    - malformed body      => unexpected-shape error
+---
+```
+
 ## 10. Generated artifacts
 
 None. csm produces a TypeScript build in `dist/` via `tsc`, but the
@@ -2527,9 +2779,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: token blobs never written outside the macOS Keychain in plaintext
 policy_kind: pii_redaction
@@ -2586,9 +2838,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: state directory and metadata files are local-user-only (POSIX)
 policy_kind: io_scope
@@ -2637,9 +2889,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: refuse `use` while claude is running, unless --force
 policy_kind: concurrency_safety
@@ -2681,9 +2933,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: encrypted egress carve-out for keychain blobs (export bundle)
 policy_kind: pii_redaction
@@ -2749,9 +3001,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: token blob egress confined to the Linux file store and ciphertext bundle
 policy_kind: pii_redaction
@@ -2804,9 +3056,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 title: token blob egress confined to Windows Credential Manager and ciphertext bundle
 policy_kind: pii_redaction
@@ -2860,9 +3112,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 constraint: |
   Runtime platform is one of {macos, linux, win32}. csm dispatches
@@ -2902,9 +3154,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 constraint: |
   Node runtime must be >= 18.17 (engines.node = ">=18.17").
@@ -2933,9 +3185,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 constraint: |
   csm has zero runtime dependencies. package.json#dependencies is
@@ -2967,9 +3219,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 constraint: |
   Source layout follows Vertical Slice + Hexagonal architecture:
@@ -3038,9 +3290,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 baseline_version: csm:SUR-001@0.1.0
 kind: surface_member_added
@@ -3075,9 +3327,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 baseline_version: csm:SUR-003@0.1.0
 kind: surface_member_added
@@ -3110,9 +3362,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 baseline_version: csm:POL-001@v0.1.0
 kind: policy_predicate_amended
@@ -3160,9 +3412,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 baseline_version: csm:SUR-001@1.0.0
 kind: surface_member_renamed
@@ -3211,9 +3463,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 baseline_version: csm:CST-001@v0.1.0
 kind: constraint_amended
@@ -3270,6 +3522,67 @@ notes: |
 ---
 ```
 
+```yaml
+---
+id: csm:DELTA-006
+type: Delta
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
+partition_id: csm
+baseline_version: csm:SUR-001@2.0.0
+kind: surface_member_added
+summary: |
+  Two additive Surface bumps and one new ExternalDependency, all
+  driven by the new `claudesub usage` subcommand:
+    - csm:SUR-001 (csm/cli) bumps 2.0.0 → 2.1.0 — argv schema gains
+      `claudesub usage [--json]` and the subcommand-name external
+      identifier list gains `usage`. No existing argv shape changes.
+    - csm:SUR-002 (csm/json-output) bumps 0.1.0 → 0.2.0 — members
+      gain csm:CON-010 (the `usage --json` shape). No existing JSON
+      shape changes.
+    - csm:CON-010 introduced as a new Contract on csm:SUR-002.
+    - csm:EXT-010 introduced as a new ExternalDependency for the
+      Anthropic OAuth usage endpoint
+      (https://api.anthropic.com/api/oauth/usage,
+      `anthropic-beta: oauth-2025-04-20`). Its long-term stability is
+      tracked as csm:OQ-006; csm:ASM-005 records the access-token
+      freshness assumption.
+    - csm:BEH-011 introduced as the new behavior implementing the
+      subcommand. policy_refs cover POL-001/005/006 to make explicit
+      that the bearer token is never written to stdout/stderr/files.
+compatibility_action: migrate
+tests_old_behavior:
+  - csm:CON-001 — every existing argv shape (list/status/save/use/rm/
+    rename/add/export/import) still recognised after the bump
+  - csm:CON-002 — exit-code taxonomy unchanged
+  - csm:CON-003 / csm:CON-004 — list/status --json shapes unchanged
+tests_new_behavior:
+  - csm:BEH-011 happy path (4 buckets, optional extra) + failure
+    paths (token missing, 401, 5xx/timeout, malformed body)
+  - csm:CON-010 round-trip + bucket-id enum + sort invariant
+  - csm:EXT-010 source-validation (URL, headers, no token egress, no
+    third-party HTTP dep)
+  - csm:CON-001 schema row including `claudesub usage [--json]`
+notes: |
+  No data-at-rest migration. The bearer token already exists in the
+  live store as part of csm:EXT-001/006/007; this delta only reads
+  it. No new credential adapter is added — `usage` reuses the
+  platform-dispatched live-store reader exposed via
+  src/shared/domain/PlatformDispatch.ts.
+
+  csm gains its first outbound network call. csm:EXT-010's
+  consumer_contract enumerates exactly the request envelope; no
+  other URL is reached by this slice and no library other than
+  `node:https` is imported by HttpsAnthropicUsageReader.
+---
+```
+
 ## 16. Implementation bindings
 
 None at the partition level. Internal file-to-ID bindings are
@@ -3289,9 +3602,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 question: |
   Refactor src/ to satisfy csm:CST-004 (Vertical Slice + Hexagonal)
@@ -3329,9 +3642,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 question: |
   Should csm ship a `claudesub repair` subcommand that detects
@@ -3364,9 +3677,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 question: |
   Add Linux/Windows support? Linux Claude Code uses libsecret /
@@ -3409,9 +3722,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 question: |
   On Linux, should csm probe at runtime for libsecret / Secret
@@ -3453,9 +3766,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 question: |
   Does csm:DELTA-003 also force a major bump on csm:SUR-002
@@ -3482,6 +3795,52 @@ default_if_unresolved: leave_sur_002_at_0_1_0
 ---
 ```
 
+```yaml
+---
+id: csm:OQ-006
+type: Open-Q
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
+partition_id: csm
+question: |
+  csm:EXT-010 (https://api.anthropic.com/api/oauth/usage with
+  `anthropic-beta: oauth-2025-04-20`) is undocumented. If Anthropic
+  changes the response shape, removes the endpoint, or rotates the
+  beta marker, csm:BEH-011 silently rots — the user sees an
+  "unexpected shape" error or a 404 with no recourse. Should csm
+  pin to a specific Claude Code version, mirror Claude Code's beta
+  marker dynamically, or accept the brittleness?
+options:
+  - label: accept_brittleness
+    consequence: |
+      Treat the endpoint as best-effort. Document the risk in the
+      help banner and in README. When the endpoint breaks, ship a
+      patch release of csm and ask users to update.
+  - label: dynamically_mirror_claude_code_marker
+    consequence: |
+      Read the `anthropic-beta` header out of Claude Code's own
+      requests (e.g. by parsing strings out of the bundled binary,
+      or by following a published constants file). High maintenance
+      cost; brittle in its own way; no guarantee the marker is
+      stable across Claude Code minor releases.
+  - label: file_anthropic_request_for_stable_surface
+    consequence: |
+      Open an issue at anthropics/claude-code asking for a stable,
+      documented usage surface. Until accepted, fall back to
+      `accept_brittleness`. Best long-term, no short-term
+      improvement.
+blocking: no
+owner: cyberash
+default_if_unresolved: accept_brittleness
+---
+```
+
 ## 18. Assumptions
 
 ```yaml
@@ -3493,9 +3852,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 assumption: |
   At most one csm process runs concurrently per user. The lock at
@@ -3525,9 +3884,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 assumption: |
   The user has either granted "Always Allow" for the live keychain
@@ -3555,9 +3914,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 assumption: |
   ~/.claude.json#oauthAccount.subscriptionType is absent today; csm
@@ -3587,9 +3946,9 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T18:31:40.354Z
-    change_request: cross-platform-support
-    scope: cross-platform
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
 partition_id: csm
 assumption: |
   On Windows, file-mode bits (0700/0600) are not enforced by Node on
@@ -3610,6 +3969,41 @@ default_if_unresolved: |
 tests:
   - csm:INV-003
   - csm:POL-002
+---
+```
+
+```yaml
+---
+id: csm:ASM-005
+type: ASSUMPTION
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T19:23:27.425Z
+    change_request: usage-subcommand
+    scope: usage
+partition_id: csm
+assumption: |
+  csm:BEH-011 calls csm:EXT-010 with the access token currently in
+  the live store. Claude Code refreshes that token roughly hourly
+  while it has an active session; csm itself does NOT refresh the
+  token, even when csm:EXT-010 returns HTTP 401. On 401 csm exits 1
+  with a clear "run `claude` once to refresh, then retry" hint and
+  the user is expected to start (or interact with) `claude` to
+  trigger a refresh, then re-run `claudesub usage`.
+source_open_q: csm:OQ-006
+blocking: no
+review_by: "2026-08-06"
+default_if_unresolved: |
+  Document the refresh expectation in README and in the usage
+  subcommand's help text. Adding a refresh path inside csm would
+  duplicate Claude Code's OAuth client and is out of scope; csm is
+  a profile manager, not an OAuth refresh service.
+tests:
+  - csm:BEH-011
+  - csm:EXT-010
 ---
 ```
 
