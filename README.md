@@ -16,7 +16,7 @@ Claude Code keeps the active subscription in two places:
 Requires Node ≥ 18.17 and macOS (uses `/usr/bin/security` and `/usr/bin/pgrep`).
 
 ```sh
-cd claude-subscription-manager
+cd claudesub
 npm install
 npm run build
 npm link        # puts `claude-sub` on your PATH

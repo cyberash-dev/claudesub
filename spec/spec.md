@@ -1,4 +1,4 @@
-# `claude-subscription-manager` — Specification
+# `claudesub` — Specification
 
 > Single source of truth for the `claude-sub` CLI. Written per
 > `~/.claude/rules/spec-driven-development.md` and
