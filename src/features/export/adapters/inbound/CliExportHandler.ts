@@ -24,7 +24,7 @@ export class CliExportHandler {
     });
     const file = positionals[0];
     if (!file) {
-      process.stderr.write("Usage: claude-sub export <file>\n");
+      process.stderr.write("Usage: claudesub export <file>\n");
       return EXIT_USAGE;
     }
     try {

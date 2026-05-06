@@ -24,7 +24,7 @@ export class CliRenameHandler {
     });
     const [oldName, newName] = positionals;
     if (!oldName || !newName) {
-      process.stderr.write("Usage: claude-sub rename <old> <new>\n");
+      process.stderr.write("Usage: claudesub rename <old> <new>\n");
       return EXIT_USAGE;
     }
     try {

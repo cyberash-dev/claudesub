@@ -34,7 +34,7 @@ function renderJson(report: ListReport): string {
 
 function renderHuman(report: ListReport): string {
   if (report.rows.length === 0) {
-    return "No profiles saved yet. Run `claude-sub save <name>` while logged in.\n";
+    return "No profiles saved yet. Run `claudesub save <name>` while logged in.\n";
   }
   const cells = report.rows.map((r) => ({
     mark: r.isActive ? "*" : " ",

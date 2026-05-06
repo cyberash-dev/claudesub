@@ -75,19 +75,19 @@ import { NodeImportFileReader } from "./features/import/adapters/outbound/NodeIm
 import { NodeCryptoImportCipher } from "./features/import/adapters/outbound/NodeCryptoImportCipher.js";
 import { NodeImportActiveMarker } from "./features/import/adapters/outbound/NodeImportActiveMarker.js";
 
-const HELP = `claude-sub — switch between Claude Code OAuth subscriptions on macOS.
+const HELP = `claudesub — switch between Claude Code OAuth subscriptions on macOS.
 
 Usage:
-  claude-sub list [--json]
-  claude-sub status [--json]
-  claude-sub save <name> [--overwrite]
-  claude-sub use <name> [--force] [--no-verify]
-  claude-sub rename <old> <new>
-  claude-sub rm <name> [--yes]
-  claude-sub add <name>
-  claude-sub export <file>
-  claude-sub import <file> [--overwrite] [--overwrite-active]
-  claude-sub --help | --version
+  claudesub list [--json]
+  claudesub status [--json]
+  claudesub save <name> [--overwrite]
+  claudesub use <name> [--force] [--no-verify]
+  claudesub rename <old> <new>
+  claudesub rm <name> [--yes]
+  claudesub add <name>
+  claudesub export <file>
+  claudesub import <file> [--overwrite] [--overwrite-active]
+  claudesub --help | --version
 
 Profiles are stored as macOS Keychain items (service "Claude Code-credentials.profile.<name>")
 plus non-secret metadata in ~/.claude-subscription-manager/profiles.json.
@@ -214,7 +214,7 @@ async function main(argv: string[]): Promise<CliExitCode> {
     return EXIT_OK;
   }
   if (command === "--version" || command === "-v") {
-    process.stdout.write("claude-sub 0.1.0\n");
+    process.stdout.write("claudesub 0.1.0\n");
     return EXIT_OK;
   }
 

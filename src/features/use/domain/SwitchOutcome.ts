@@ -8,7 +8,7 @@ export interface SwitchOutcome {
 
 export class UnknownProfile extends Error {
   constructor(public readonly profileName: string) {
-    super(`Unknown profile "${profileName}". Run \`claude-sub list\` to see available profiles.`);
+    super(`Unknown profile "${profileName}". Run \`claudesub list\` to see available profiles.`);
     this.name = "UnknownProfile";
   }
 }

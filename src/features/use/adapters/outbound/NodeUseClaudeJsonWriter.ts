@@ -36,7 +36,7 @@ export class NodeUseClaudeJsonWriter implements UseClaudeJsonWriter {
       } catch (err) {
         if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
         if (Date.now() > deadline) {
-          throw new Error(`Could not acquire lock ${lockPath} after 5s. Stale lock? Remove manually if no other claude-sub is running.`);
+          throw new Error(`Could not acquire lock ${lockPath} after 5s. Stale lock? Remove manually if no other claudesub is running.`);
         }
         await new Promise((r) => setTimeout(r, 50));
       }

@@ -1,6 +1,6 @@
 # `claudesub` — Specification
 
-> Single source of truth for the `claude-sub` CLI. Written per
+> Single source of truth for the `claudesub` CLI. Written per
 > `~/.claude/rules/spec-driven-development.md` and
 > `~/.claude/skills/spec-driven-development/SKILL.md`.
 >
@@ -21,7 +21,7 @@
 
 ## 1. Context
 
-`claude-sub` is a macOS-only CLI that manages multiple Claude Code
+`claudesub` is a macOS-only CLI that manages multiple Claude Code
 OAuth subscriptions on a single workstation. Claude Code keeps the
 active subscription in two independent places — the macOS Keychain
 generic-password item `Claude Code-credentials` (OAuth tokens, both
@@ -32,7 +32,7 @@ treats the keychain plus the JSON file as a single implicit account;
 swapping accounts manually requires a full logout/login cycle and
 loses the previous account's locally cached tokens.
 
-`claude-sub` introduces named profiles. Each profile owns one extra
+`claudesub` introduces named profiles. Each profile owns one extra
 keychain item (`Claude Code-credentials.profile.<name>`) plus a
 non-secret metadata row in `~/.claude-subscription-manager/profiles.json`.
 The active profile is recorded in `~/.claude-subscription-manager/active`.
@@ -40,7 +40,7 @@ Switching profiles is a synchronous swap of the keychain item and the
 two `~/.claude.json` fields, with auto-snapshot of the previously
 active profile to preserve rotated refresh tokens.
 
-This spec governs the `claude-sub` CLI only. The Claude Code CLI,
+This spec governs the `claudesub` CLI only. The Claude Code CLI,
 the Anthropic OAuth flow, the macOS Keychain implementation, and the
 internal layout of `~/.claude.json` outside the two mutated fields
 are external dependencies (see §8) and out of scope for normative
@@ -55,7 +55,7 @@ authoring (see §18).
   blob Claude Code reads to make API calls.
 - **Profile keychain entry** — a generic-password Keychain item with
   `service="Claude Code-credentials.profile.<name>"` and
-  `account=$USER`. Owned by `claude-sub`; Claude Code never reads it.
+  `account=$USER`. Owned by `claudesub`; Claude Code never reads it.
 - **Profile** — a named tuple of (profile keychain entry,
   metadata row in `profiles.json`). Identified by `name` matching
   `^[a-zA-Z0-9._-]{1,64}$`.
@@ -67,22 +67,22 @@ authoring (see §18).
   (verbatim copy of the field from `~/.claude.json` at save time),
   `userID`, `email`, `orgName`, `subscriptionType`, `createdAt`,
   `lastUsedAt`. No tokens.
-- **Auto-snapshot** — the operation `claude-sub use` performs before
+- **Auto-snapshot** — the operation `claudesub use` performs before
   loading the target: it copies the current live keychain entry into
   the active profile's keychain slot. Captures rotated refresh tokens.
-- **Live JSON** — the file `~/.claude.json`. `claude-sub` mutates
+- **Live JSON** — the file `~/.claude.json`. `claudesub` mutates
   exactly two fields in it: top-level `userID` and the `oauthAccount`
   block. All other fields are preserved verbatim.
 - **State directory** — `~/.claude-subscription-manager/`. Created
   with mode `0700`. Holds `profiles.json` (`0600`) and `active`
   (`0600`).
 - **Running claude process** — any process visible to `pgrep -lf
-  '(^|/)(claude|Claude\.app)'` whose basename is not `claude-sub`
-  and whose argv does not match `node\b.*claude-sub`.
+  '(^|/)(claude|Claude\.app)'` whose basename is not `claudesub`
+  and whose argv does not match `node\b.*claudesub`.
 - **Desync** — state in which `active` marker names a profile P
   whose recorded `oauthAccount.accountUuid` differs from the
   `oauthAccount.accountUuid` currently in `~/.claude.json`. Reported
-  by `claude-sub status`.
+  by `claudesub status`.
 
 ---
 
@@ -166,13 +166,13 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T14:37:03.118Z
-    change_request: export/import feature
-    scope: surface_major_bump
-    reviewed_test_oracle: tests/contracts-export.test.ts
+    timestamp: 2026-05-06T15:21:41.667Z
+    change_request: binary-rename-claudesub
+    scope: binary-rename
+    reviewed_test_oracle: tests/cli-argv.test.ts
 partition_id: csm
 name: csm/cli
-version: "1.0.0"
+version: "2.0.0"
 boundary_type: cli
 members:
   - csm:CON-001
@@ -180,12 +180,13 @@ members:
   - csm:CON-008
 consumer_compat_policy: semver_per_surface
 notes: |
-  Argv shape and exit-code taxonomy for the `claude-sub` binary.
+  Argv shape and exit-code taxonomy for the `claudesub` binary.
   Stable identifiers: subcommand names (list, status, save, use, rm,
-  rename, add, export, import) and their flag long-names. Major bump
-  to 1.0.0 cascades from csm:POL-001 predicate amendment (csm:DELTA-003);
-  additive extensions to argv (export/import + `--overwrite-active`)
-  themselves are minor-only. See csm:DELTA-001.
+  rename, add, export, import) and their flag long-names. Bump
+  history: 0.1.0 → 1.0.0 (csm:DELTA-003 POL-001 predicate amendment,
+  csm:DELTA-001 export/import argv additive); 1.0.0 → 2.0.0
+  (csm:DELTA-004 binary rename `claude-sub` → `claudesub`,
+  predicate-breaking on every CON-001 schema row).
 ---
 ```
 
@@ -241,7 +242,7 @@ consumer_compat_policy: semver_per_surface
 notes: |
   On-disk format of ~/.claude-subscription-manager/profiles.json
   (versioned schema), the active marker file, and the encrypted
-  bundle file emitted by `claude-sub export` (csm:CON-009). Owned
+  bundle file emitted by `claudesub export` (csm:CON-009). Owned
   by csm; not read by Claude Code itself. Major bump to 1.0.0
   cascades from csm:POL-001 predicate amendment (csm:DELTA-003);
   the new CON-009 member is itself additive. See csm:DELTA-002.
@@ -259,23 +260,24 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.480Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T15:21:41.929Z
+    change_request: binary-rename-claudesub
+    scope: binary-rename
+    reviewed_test_oracle: tests/cli-argv.test.ts
 partition_id: csm
-title: claude-sub list — print profiles with active marker
+title: claudesub list — print profiles with active marker
 given: |
   - state directory ~/.claude-subscription-manager/ exists or is absent
   - profiles.json is a valid CON-005 document (or missing)
   - active marker is a valid CON-006 document (or missing)
-when: user runs `claude-sub list` (with optional --json)
+when: user runs `claudesub list` (with optional --json)
 then: |
   process exits 0; output covers every profile recorded in
   profiles.json sorted by name ascending; the row whose name equals
   the active marker carries a leading `*` glyph (human format) or
   `active: true` (json format); an absent or empty profiles.json
   yields exactly one human-format line "No profiles saved yet. Run
-  `claude-sub save <name>` while logged in." or the json document
+  `claudesub save <name>` while logged in." or the json document
   `{ active: <string|null>, profiles: [] }`.
   Stdout terminator: single LF.
   No keychain access is performed.
@@ -323,15 +325,16 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.480Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T15:21:41.993Z
+    change_request: binary-rename-claudesub
+    scope: binary-rename
+    reviewed_test_oracle: tests/cli-argv.test.ts
 partition_id: csm
-title: claude-sub status — report active profile, live auth status, desync
+title: claudesub status — report active profile, live auth status, desync
 given: |
   - state directory exists or is absent
   - claude binary on PATH (EXT-003)
-when: user runs `claude-sub status` (with optional --json)
+when: user runs `claudesub status` (with optional --json)
 then: |
   process exits 0; output covers three blocks: (a) active profile
   name from the marker (or "<none recorded>"); (b) the parsed result
@@ -388,17 +391,18 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.480Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T15:21:42.058Z
+    change_request: binary-rename-claudesub
+    scope: binary-rename
+    reviewed_test_oracle: tests/cli-argv.test.ts
 partition_id: csm
-title: claude-sub save — snapshot live credentials into a named profile
+title: claudesub save — snapshot live credentials into a named profile
 given: |
   - user is currently logged in (~/.claude.json contains both
     oauthAccount object and a string userID)
   - live keychain entry "Claude Code-credentials" exists
   - state directory is writable
-when: user runs `claude-sub save <name>` (with optional --overwrite)
+when: user runs `claudesub save <name>` (with optional --overwrite)
 then: |
   process exits 0; the profile keychain entry
   "Claude Code-credentials.profile.<name>" is created or replaced
@@ -463,16 +467,17 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.480Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T15:21:42.125Z
+    change_request: binary-rename-claudesub
+    scope: binary-rename
+    reviewed_test_oracle: tests/cli-argv.test.ts
 partition_id: csm
-title: claude-sub use — swap credentials with auto-snapshot and verification
+title: claudesub use — swap credentials with auto-snapshot and verification
 given: |
   - profile <name> exists in profiles.json with a populated keychain slot
   - state directory is writable
   - claude binary on PATH for post-verification (EXT-003)
-when: user runs `claude-sub use <name>` (with optional --force, --no-verify)
+when: user runs `claudesub use <name>` (with optional --force, --no-verify)
 then: |
   process exits 0 after the following ordered steps:
     1. when --force is absent, find running claude processes
@@ -551,14 +556,15 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.480Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T15:21:42.192Z
+    change_request: binary-rename-claudesub
+    scope: binary-rename
+    reviewed_test_oracle: tests/cli-argv.test.ts
 partition_id: csm
-title: claude-sub rm — delete profile metadata and keychain slot, leave live untouched
+title: claudesub rm — delete profile metadata and keychain slot, leave live untouched
 given: |
   - profile <name> exists in profiles.json
-when: user runs `claude-sub rm <name>` (with optional --yes)
+when: user runs `claudesub rm <name>` (with optional --yes)
 then: |
   when --yes is absent, prompt "Delete profile \"<name>\"? Type the
   name to confirm:" on stdin; abort with exit 1 when the typed value
@@ -612,15 +618,16 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.480Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T15:21:42.258Z
+    change_request: binary-rename-claudesub
+    scope: binary-rename
+    reviewed_test_oracle: tests/cli-argv.test.ts
 partition_id: csm
-title: claude-sub rename — move keychain slot, update profiles.json, update marker
+title: claudesub rename — move keychain slot, update profiles.json, update marker
 given: |
   - profile <old> exists in profiles.json with a populated keychain slot
   - <new> is not present in profiles.json
-when: user runs `claude-sub rename <old> <new>`
+when: user runs `claudesub rename <old> <new>`
 then: |
   process exits 0 after: (a) <new> passes the regex
   `^[a-zA-Z0-9._-]{1,64}$`; (b) the byte content of the keychain
@@ -672,15 +679,16 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.480Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T15:21:42.322Z
+    change_request: binary-rename-claudesub
+    scope: binary-rename
+    reviewed_test_oracle: tests/cli-argv.test.ts
 partition_id: csm
-title: claude-sub add — orchestrate logout, login, save under one name
+title: claudesub add — orchestrate logout, login, save under one name
 given: |
   - claude binary on PATH (EXT-003)
   - <name> is a syntactically valid profile name
-when: user runs `claude-sub add <name>`
+when: user runs `claudesub add <name>`
 then: |
   process prints a three-line plan, prompts "Continue? [y/N]:"; on
   "y"/"yes" (case-insensitive) the process invokes
@@ -732,20 +740,21 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.480Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T15:21:42.387Z
+    change_request: binary-rename-claudesub
+    scope: binary-rename
+    reviewed_test_oracle: tests/cli-argv.test.ts
 partition_id: csm
-title: claude-sub usage errors — exit 2 on unknown command and missing positional
+title: claudesub usage errors — exit 2 on unknown command and missing positional
 given: |
   - any environment (no preconditions on filesystem, keychain, or claude state)
 when: |
   user runs the binary with no command, an unknown command, --help,
   --version, or a known command missing required positionals
 then: |
-  - `claude-sub` with no args prints the HELP banner and exits 0
-  - `claude-sub --help|-h|help` prints the HELP banner and exits 0
-  - `claude-sub --version|-v` prints "claude-sub <semver>\n" and exits 0
+  - `claudesub` with no args prints the HELP banner and exits 0
+  - `claudesub --help|-h|help` prints the HELP banner and exits 0
+  - `claudesub --version|-v` prints "claudesub <semver>\n" and exits 0
   - an unknown command prints "Unknown command: <cmd>\n\n<HELP>" to
     stderr and exits 2
   - a known command missing a required positional prints the
@@ -791,12 +800,12 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T14:38:04.022Z
-    change_request: export/import feature
-    scope: cascade-from-pol-001
-    reviewed_test_oracle: tests/contracts-export.test.ts
+    timestamp: 2026-05-06T15:21:42.452Z
+    change_request: binary-rename-claudesub
+    scope: binary-rename
+    reviewed_test_oracle: tests/cli-argv.test.ts
 partition_id: csm
-title: claude-sub export — write all profiles to an encrypted bundle file
+title: claudesub export — write all profiles to an encrypted bundle file
 given: |
   - state directory exists and profiles.json is a valid CON-005
     document with at least one profile (an empty store yields exit 1)
@@ -804,7 +813,7 @@ given: |
     slot at "Claude Code-credentials.profile.<name>" (a missing slot
     aborts the export)
   - the target file path's parent directory exists and is writable
-when: user runs `claude-sub export <file>`
+when: user runs `claudesub export <file>`
 then: |
   process prompts the user twice on stdin for a passphrase (input is
   not echoed); when the two entries differ the process exits 1 with
@@ -882,19 +891,19 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T14:38:04.088Z
-    change_request: export/import feature
-    scope: cascade-from-pol-001
-    reviewed_test_oracle: tests/contracts-export.test.ts
+    timestamp: 2026-05-06T15:21:42.518Z
+    change_request: binary-rename-claudesub
+    scope: binary-rename
+    reviewed_test_oracle: tests/cli-argv.test.ts
 partition_id: csm
-title: claude-sub import — load profiles from an encrypted bundle, skip-by-default on conflict
+title: claudesub import — load profiles from an encrypted bundle, skip-by-default on conflict
 given: |
-  - <file> exists, is readable, and was produced by claude-sub export
+  - <file> exists, is readable, and was produced by claudesub export
     (CON-009 v1) with a passphrase the user can type
   - state directory may or may not exist (created with mode 0700 if
     absent)
 when: |
-  user runs `claude-sub import <file>` (with optional --overwrite,
+  user runs `claudesub import <file>` (with optional --overwrite,
   optional --overwrite-active)
 then: |
   process prompts the user once on stdin for a passphrase (input is
@@ -1001,26 +1010,27 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.416Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T15:21:41.736Z
+    change_request: binary-rename-claudesub
+    scope: binary-rename
+    reviewed_test_oracle: tests/cli-argv.test.ts
 partition_id: csm
-title: claude-sub argv shape per subcommand
+title: claudesub argv shape per subcommand
 surface_ref: csm:SUR-001
 schema: |
-  claude-sub                                 # = `claude-sub --help`, exit 0
-  claude-sub --help | -h | help              # exit 0, prints HELP
-  claude-sub --version | -v                  # exit 0, prints "claude-sub <semver>\n"
-  claude-sub list   [--json]
-  claude-sub status [--json]
-  claude-sub save   <name> [--overwrite]
-  claude-sub use    <name> [--force] [--no-verify]
-  claude-sub rm     <name> [--yes]
-  claude-sub remove <name> [--yes]           # alias of rm
-  claude-sub delete <name> [--yes]           # alias of rm
-  claude-sub rename <old> <new>
-  claude-sub mv     <old> <new>              # alias of rename
-  claude-sub add    <name>
+  claudesub                                 # = `claudesub --help`, exit 0
+  claudesub --help | -h | help              # exit 0, prints HELP
+  claudesub --version | -v                  # exit 0, prints "claudesub <semver>\n"
+  claudesub list   [--json]
+  claudesub status [--json]
+  claudesub save   <name> [--overwrite]
+  claudesub use    <name> [--force] [--no-verify]
+  claudesub rm     <name> [--yes]
+  claudesub remove <name> [--yes]           # alias of rm
+  claudesub delete <name> [--yes]           # alias of rm
+  claudesub rename <old> <new>
+  claudesub mv     <old> <new>              # alias of rename
+  claudesub add    <name>
 preconditions: |
   - <name> matches `^[a-zA-Z0-9._-]{1,64}$`
   - all flags are long-form except `-y` (alias of --yes), `-h`
@@ -1068,11 +1078,12 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-05T17:53:19.416Z
-    change_request: initial v0.1.0 baseline approval — claude-subscription-manager
-    scope: first-time-approval
+    timestamp: 2026-05-06T15:21:41.800Z
+    change_request: binary-rename-claudesub
+    scope: binary-rename
+    reviewed_test_oracle: tests/cli-argv.test.ts
 partition_id: csm
-title: claude-sub exit-code taxonomy
+title: claudesub exit-code taxonomy
 surface_ref: csm:SUR-001
 schema: |
   exit 0 — success path documented per BEH-001..008
@@ -1122,7 +1133,7 @@ lifecycle:
     change_request: initial v0.1.0 baseline approval — claude-subscription-manager
     scope: first-time-approval
 partition_id: csm
-title: claude-sub list --json output shape
+title: claudesub list --json output shape
 surface_ref: csm:SUR-002
 schema: |
   {
@@ -1189,7 +1200,7 @@ lifecycle:
     change_request: initial v0.1.0 baseline approval — claude-subscription-manager
     scope: first-time-approval
 partition_id: csm
-title: claude-sub status --json output shape
+title: claudesub status --json output shape
 surface_ref: csm:SUR-002
 schema: |
   {
@@ -1447,16 +1458,16 @@ lifecycle:
   approval_record:
     owner_role: tech-lead
     approver_identity: cyberash
-    timestamp: 2026-05-06T14:38:04.151Z
-    change_request: export/import feature
-    scope: cascade-from-pol-001
-    reviewed_test_oracle: tests/contracts-export.test.ts
+    timestamp: 2026-05-06T15:21:41.866Z
+    change_request: binary-rename-claudesub
+    scope: binary-rename
+    reviewed_test_oracle: tests/cli-argv.test.ts
 partition_id: csm
-title: claude-sub export / import argv shape
+title: claudesub export / import argv shape
 surface_ref: csm:SUR-001
 schema: |
-  claude-sub export <file>
-  claude-sub import <file> [--overwrite] [--overwrite-active]
+  claudesub export <file>
+  claudesub import <file> [--overwrite] [--overwrite-active]
 preconditions: |
   - <file> is a single positional path, supplied verbatim to fs APIs
   - --overwrite-active implies --overwrite for non-active conflicts
@@ -1795,7 +1806,7 @@ lifecycle:
 partition_id: csm
 title: post-use accountUuid alignment between live JSON and target profile
 always: |
-  After `claude-sub use <name>` exits 0, the value at
+  After `claudesub use <name>` exits 0, the value at
   ~/.claude.json#oauthAccount.accountUuid equals the recorded value
   at profiles.json[name=<name>].oauthAccount.accountUuid; the active
   marker equals <name>; the live keychain entry "Claude
@@ -1906,7 +1917,7 @@ consumer_contract: |
     /usr/bin/pgrep -lf '(^|/)(claude|Claude\.app)'
   Exit 0 = matches found, stdout = `<pid> <command>` lines.
   Exit 1 = no matches (typed empty result, not an error).
-  csm filters out itself by argv pattern `claude-sub`, `node\b.*claude-sub`.
+  csm filters out itself by argv pattern `claudesub`, `node\b.*claudesub`.
 drift_detection:
   mechanism: none_with_review_by:2026-11-05
 auth_scope: not_applicable
@@ -1921,7 +1932,7 @@ last_verified_at: "2026-05-05"
 test_obligation:
   predicate: |
     procCheck.ts invokes /usr/bin/pgrep with the exact pattern;
-    self-filter excludes claude-sub processes; an empty match yields
+    self-filter excludes claudesub processes; an empty match yields
     an empty list, not an error.
   test_template: integration
   boundary_classes:
@@ -2634,6 +2645,58 @@ notes: |
 ---
 ```
 
+```yaml
+---
+id: csm:DELTA-004
+type: Delta
+lifecycle:
+  status: approved
+  approval_record:
+    owner_role: tech-lead
+    approver_identity: cyberash
+    timestamp: 2026-05-06T15:21:42.584Z
+    change_request: binary-rename-claudesub
+    scope: binary-rename
+    reviewed_test_oracle: tests/cli-argv.test.ts
+partition_id: csm
+baseline_version: csm:SUR-001@1.0.0
+kind: surface_member_renamed
+summary: |
+  The on-disk binary name shipped by the npm package is renamed from
+  `claude-sub` to `claudesub`. Every argv shape in csm:CON-001 and
+  csm:CON-008 changes accordingly (e.g. `claude-sub list` →
+  `claudesub list`); the `--version` output of csm:BEH-008 changes
+  from `claude-sub <semver>\n` to `claudesub <semver>\n`. SUR-001
+  bumps 1.0.0 → 2.0.0 (predicate-breaking — every external invocation
+  must update). The npm package name also moves to `claudesub` so
+  `npm install -g claudesub` produces the new binary.
+compatibility_action: migrate
+tests_old_behavior:
+  - csm:CON-001 (legacy `claude-sub` argv shape — no longer recognised
+    after rename; tests asserting on the old binary name are updated
+    in lockstep)
+  - csm:BEH-008 (legacy `--version` output `claude-sub <semver>` —
+    replaced with `claudesub <semver>`)
+tests_new_behavior:
+  - csm:CON-001 (new `claudesub` argv shape recognised by dispatcher)
+  - csm:CON-008 (new `claudesub export|import` argv recognised)
+  - csm:BEH-008 (`--version` prints `claudesub <semver>`)
+notes: |
+  Out of scope of this delta: the state directory
+  `~/.claude-subscription-manager/` (csm:CON-005 / csm:CON-006) and
+  the keychain service prefix `Claude Code-credentials.profile.<name>`
+  are NOT renamed — those would be data-at-rest changes requiring a
+  Migration block, not a Delta. The user's existing profiles continue
+  to work after upgrade with no on-disk movement.
+
+  Backwards-compatibility: this delta does NOT install a `claude-sub`
+  alias. Users who relied on the old binary name must update their
+  scripts. If a deprecation alias is desired in a future release, it
+  would be authored as a fresh additive Delta on csm:SUR-001 with
+  status: deprecated on the alias entry.
+---
+```
+
 ## 16. Implementation bindings
 
 None at the partition level. Internal file-to-ID bindings are
@@ -2686,7 +2749,7 @@ lifecycle:
   status: proposed
 partition_id: csm
 question: |
-  Should csm ship a `claude-sub repair` subcommand that detects
+  Should csm ship a `claudesub repair` subcommand that detects
   desync between ~/.claude.json and the live keychain entry, and
   offers to rewrite ~/.claude.json from the active profile's
   recorded oauthAccount?
@@ -2700,7 +2763,7 @@ options:
   - label: defer_to_v0_2
     consequence: |
       Keep `status` as the desync detector; users re-run
-      `claude-sub use <name>` to recover. Smaller v0.1 surface.
+      `claudesub use <name>` to recover. Smaller v0.1 surface.
 blocking: no
 owner: cyberash
 default_if_unresolved: defer_to_v0_2
@@ -2780,7 +2843,7 @@ assumption: |
   At most one csm process runs concurrently per user. The lock at
   ~/.claude.json.csm.lock guards the JSON patch (CON-007), but the
   keychain swap step in BEH-004 has no inter-process lock — two
-  concurrent `claude-sub use` invocations could interleave their
+  concurrent `claudesub use` invocations could interleave their
   keychain writes.
 source_open_q: null
 blocking: no
@@ -2858,7 +2921,7 @@ tests:
   Tokens never live in this file (POL-001); the metadata it holds
   (email, orgName, accountUuid) is non-secret.
 - Automating `claude auth login`. The OAuth flow opens a browser; csm
-  cannot drive it. `claude-sub add` instructs the user to run the
+  cannot drive it. `claudesub add` instructs the user to run the
   command interactively (BEH-007).
 - Killing running `claude` processes during `use`. csm refuses with a
   PID list (POL-003); the user terminates them.
@@ -2870,7 +2933,7 @@ tests:
   single current snapshot; older snapshots are overwritten on
   auto-snapshot during `use` (BEH-004).
 - (Removed in csm:DELTA-001 / csm:DELTA-002.) Cross-machine profile
-  sync is now in scope via `claude-sub export` / `claude-sub import`
+  sync is now in scope via `claudesub export` / `claudesub import`
   (csm:BEH-009, csm:BEH-010); the encrypted bundle file format is
   csm:CON-009 and the egress carve-out is csm:POL-004.
 

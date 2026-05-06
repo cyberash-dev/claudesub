@@ -27,7 +27,7 @@ export class CliUseHandler {
     });
     const name = positionals[0];
     if (!name) {
-      process.stderr.write("Usage: claude-sub use <name> [--force] [--no-verify]\n");
+      process.stderr.write("Usage: claudesub use <name> [--force] [--no-verify]\n");
       return EXIT_USAGE;
     }
     try {

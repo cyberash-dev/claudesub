@@ -30,7 +30,7 @@ export class CliImportHandler {
     });
     const file = positionals[0];
     if (!file) {
-      process.stderr.write("Usage: claude-sub import <file> [--overwrite] [--overwrite-active]\n");
+      process.stderr.write("Usage: claudesub import <file> [--overwrite] [--overwrite-active]\n");
       return EXIT_USAGE;
     }
 
@@ -59,7 +59,7 @@ export class CliImportHandler {
       for (const name of outcome.skippedActive) {
         process.stderr.write(
           `Profile "${name}" is currently active; pass --overwrite-active to replace its keychain entry. ` +
-            `Otherwise run \`claude-sub use <other>\` first, then re-import.\n`,
+            `Otherwise run \`claudesub use <other>\` first, then re-import.\n`,
         );
       }
       process.stdout.write(summary + "\n");

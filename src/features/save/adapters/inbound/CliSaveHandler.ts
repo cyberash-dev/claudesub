@@ -24,7 +24,7 @@ export class CliSaveHandler {
     });
     const name = positionals[0];
     if (!name) {
-      process.stderr.write("Usage: claude-sub save <name> [--overwrite]\n");
+      process.stderr.write("Usage: claudesub save <name> [--overwrite]\n");
       return EXIT_USAGE;
     }
     try {

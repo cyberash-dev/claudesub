@@ -30,7 +30,7 @@ export class AllSkippedActive extends Error {
   constructor(public readonly names: string[]) {
     super(
       `All bundle profiles match the active profile and were skipped. ` +
-        `Pass --overwrite-active to replace, or run \`claude-sub use <other>\` first.`,
+        `Pass --overwrite-active to replace, or run \`claudesub use <other>\` first.`,
     );
     this.name = "AllSkippedActive";
   }

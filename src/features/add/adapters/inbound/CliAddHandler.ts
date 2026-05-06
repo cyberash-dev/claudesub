@@ -21,7 +21,7 @@ export class CliAddHandler {
     });
     const name = positionals[0];
     if (!name) {
-      process.stderr.write("Usage: claude-sub add <name>\n");
+      process.stderr.write("Usage: claudesub add <name>\n");
       return EXIT_USAGE;
     }
     try {

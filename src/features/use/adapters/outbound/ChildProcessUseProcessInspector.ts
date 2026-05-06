@@ -39,8 +39,8 @@ export class ChildProcessUseProcessInspector implements UseProcessInspector {
       const pid = Number.parseInt(trimmed.slice(0, space), 10);
       const command = trimmed.slice(space + 1);
       if (!Number.isFinite(pid) || pid === self) continue;
-      if (/(^|\/)claude-sub(\s|$)/.test(command)) continue;
-      if (/node\b.*claude-sub/.test(command)) continue;
+      if (/(^|\/)claudesub(\s|$)/.test(command)) continue;
+      if (/node\b.*claudesub/.test(command)) continue;
       out.push({ pid, command: command.split(" ")[0] ?? command });
     }
     return out;

@@ -42,10 +42,10 @@ async function runIsolated(args: string[]): Promise<RunResult> {
 
 describe("CLI argv shape (CON-001)", () => {
   // @covers csm:CON-001
-  test("`claude-sub` with no args prints HELP and exits 0", async () => {
+  test("`claudesub` with no args prints HELP and exits 0", async () => {
     const r = await runIsolated([]);
     assert.equal(r.exitCode, 0);
-    assert.match(r.stdout, /Usage:\n {2}claude-sub list/);
+    assert.match(r.stdout, /Usage:\n {2}claudesub list/);
   });
 
   // @covers csm:CON-001
@@ -53,16 +53,17 @@ describe("CLI argv shape (CON-001)", () => {
     for (const flag of ["--help", "-h", "help"]) {
       const r = await runIsolated([flag]);
       assert.equal(r.exitCode, 0, `flag ${flag} returned ${r.exitCode}`);
-      assert.match(r.stdout, /claude-sub — switch between Claude Code OAuth subscriptions/);
+      assert.match(r.stdout, /claudesub — switch between Claude Code OAuth subscriptions/);
     }
   });
 
   // @covers csm:CON-001
-  test("--version / -v print 'claude-sub <semver>'", async () => {
+  // @covers csm:DELTA-004
+  test("--version / -v print 'claudesub <semver>'", async () => {
     for (const flag of ["--version", "-v"]) {
       const r = await runIsolated([flag]);
       assert.equal(r.exitCode, 0);
-      assert.match(r.stdout, /^claude-sub \d+\.\d+\.\d+\n$/);
+      assert.match(r.stdout, /^claudesub \d+\.\d+\.\d+\n$/);
     }
   });
 
@@ -70,7 +71,7 @@ describe("CLI argv shape (CON-001)", () => {
   test("subcommand and flag names are stable: list/status/save/use/rm/rename/add and --json/--overwrite/--force/--no-verify/--yes", async () => {
     const r = await runIsolated(["--help"]);
     for (const sub of ["list", "status", "save", "use", "rm", "rename", "add"]) {
-      assert.match(r.stdout, new RegExp(`claude-sub ${sub}`));
+      assert.match(r.stdout, new RegExp(`claudesub ${sub}`));
     }
     for (const flag of ["--json", "--overwrite", "--force", "--no-verify", "--yes"]) {
       assert.match(r.stdout, new RegExp(flag.replace(/-/g, "\\-")));
@@ -116,14 +117,14 @@ describe("Usage errors (BEH-008)", () => {
     const r = await runIsolated(["nope"]);
     assert.equal(r.exitCode, 2);
     assert.match(r.stderr, /Unknown command: nope/);
-    assert.match(r.stderr, /Usage:\n {2}claude-sub list/);
+    assert.match(r.stderr, /Usage:\n {2}claudesub list/);
   });
 
   // @covers csm:BEH-008
   test("HELP banner enumerates every subcommand from CON-001", async () => {
     const help = await runIsolated(["--help"]);
     for (const sub of ["list", "status", "save", "use", "rename", "rm", "add"]) {
-      assert.match(help.stdout, new RegExp(`\\bclaude-sub ${sub}\\b`));
+      assert.match(help.stdout, new RegExp(`\\bclaudesub ${sub}\\b`));
     }
   });
 
@@ -132,28 +133,28 @@ describe("Usage errors (BEH-008)", () => {
     const versionOutput = (await runIsolated(["--version"])).stdout.trim();
     const { readFile } = await import("node:fs/promises");
     const pkg = JSON.parse(await readFile(join(REPO_ROOT, "package.json"), "utf8")) as { version: string };
-    assert.equal(versionOutput, `claude-sub ${pkg.version}`);
+    assert.equal(versionOutput, `claudesub ${pkg.version}`);
   });
 });
 
 describe("Export/import argv (CON-008)", () => {
   // @covers csm:CON-008
   // @covers csm:DELTA-001
-  test("`claude-sub export` without <file> exits 2 with Usage line", async () => {
+  test("`claudesub export` without <file> exits 2 with Usage line", async () => {
     const r = await runIsolated(["export"]);
     assert.equal(r.exitCode, 2);
-    assert.match(r.stderr, /Usage: claude-sub export <file>/);
+    assert.match(r.stderr, /Usage: claudesub export <file>/);
   });
 
   // @covers csm:CON-008
-  test("`claude-sub import` without <file> exits 2 with Usage line", async () => {
+  test("`claudesub import` without <file> exits 2 with Usage line", async () => {
     const r = await runIsolated(["import"]);
     assert.equal(r.exitCode, 2);
-    assert.match(r.stderr, /Usage: claude-sub import <file>/);
+    assert.match(r.stderr, /Usage: claudesub import <file>/);
   });
 
   // @covers csm:CON-008
-  test("`claude-sub import --unknown-flag <file>` exits 1 from parseArgs strict mode", async () => {
+  test("`claudesub import --unknown-flag <file>` exits 1 from parseArgs strict mode", async () => {
     const r = await runIsolated(["import", "--unknown-flag", "/tmp/x"]);
     assert.equal(r.exitCode, 1);
     assert.match(r.stderr, /error:.*unknown/i);
@@ -162,8 +163,8 @@ describe("Export/import argv (CON-008)", () => {
   // @covers csm:DELTA-001
   test("HELP banner advertises both `export` and `import` subcommands", async () => {
     const r = await runIsolated(["--help"]);
-    assert.match(r.stdout, /\bclaude-sub export <file>/);
-    assert.match(r.stdout, /\bclaude-sub import <file>/);
+    assert.match(r.stdout, /\bclaudesub export <file>/);
+    assert.match(r.stdout, /\bclaudesub import <file>/);
     assert.match(r.stdout, /--overwrite-active/);
   });
 });

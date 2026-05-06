@@ -21,7 +21,7 @@ export class CliRmHandler {
     });
     const name = positionals[0];
     if (!name) {
-      process.stderr.write("Usage: claude-sub rm <name> [--yes]\n");
+      process.stderr.write("Usage: claudesub rm <name> [--yes]\n");
       return EXIT_USAGE;
     }
     try {
